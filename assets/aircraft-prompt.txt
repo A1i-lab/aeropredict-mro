@@ -1,0 +1,8 @@
+Original image generated with the built-in imagegen tool.
+Use case: stylized-concept. Premium aviation analytics hero, landscape.
+Unbranded realistic 3D twin-engine passenger jet, polished white and cool steel,
+elevated three-quarter view. Right-side aircraft with left-side midnight navy
+negative space for interface text. Restrained icy-blue edge illumination, subtle
+floor lines and shadows. No text, airline logos, watermark, charts or HUD.
+Decorative product context only, not a technical diagram.
+The generated source was resized to 1200 by 800 and compressed as WebP.

@@ -1,0 +1,31 @@
+{
+  "missing": 0,
+  "duplicate_cycles": 0,
+  "train_engines": 100,
+  "test_engines": 100,
+  "train_rows": 20631,
+  "test_rows": 13096,
+  "excluded_sensors": [
+    "s1",
+    "s5",
+    "s10",
+    "s16",
+    "s18",
+    "s19"
+  ],
+  "lifetime_summary": {
+    "count": 100.0,
+    "mean": 206.31,
+    "std": 46.3427492067573,
+    "min": 128.0,
+    "25%": 177.0,
+    "50%": 199.0,
+    "75%": 229.25,
+    "max": 362.0
+  },
+  "settings_std": {
+    "op1": 0.002187313449015146,
+    "op2": 0.00029306212456614496,
+    "op3": 0.0
+  }
+}
