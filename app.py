@@ -4,7 +4,7 @@ import runpy
 import streamlit as st
 ROOT=Path(__file__).resolve().parent
 if st.query_params.get('experience', 'studio') != 'classic':
-    st.set_page_config(page_title='AeroPredict | Atelier moteur',page_icon=str(ROOT/'assets/favicon.svg'),layout='wide',initial_sidebar_state='collapsed')
+    st.set_page_config(page_title='AeroPredict | Maintenance prédictive',page_icon=str(ROOT/'assets/favicon.svg'),layout='wide',initial_sidebar_state='collapsed')
     st.markdown('''<style>
     [data-testid="stHeader"]{display:none}
     .block-container{padding:0!important;max-width:none!important}

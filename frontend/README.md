@@ -52,3 +52,32 @@ supported `st.iframe` HTML surface, so no separate API, paid service or new host
 is necessary. Classic views retain the full original evaluation and report access.
 
 For a narrow-layout review on Streamlit, use `?preview=mobile` (390 px frame).
+
+## Aircraft welcome and multi-equipment scenarios (V3)
+
+The default landing page explains predictive maintenance before opening a data
+workspace. It includes an original procedural, stylised A320-family aircraft,
+with six accessible zones and eased camera transitions. This is not Airbus CAD;
+locations and geometry are illustrative. The five non-engine systems have
+synthetic histories for twelve fictitious aircraft, with no mapping to NASA
+engine identifiers. NASA FD001 predictions remain unchanged and separate.
+
+Regenerate scenarios with `python scripts/generate_aircraft_scenarios.py` before
+building. This writes 3,600 observations to `data/synthetic/equipment_signals.csv`
+and the corresponding frontend JSON. The generator is deterministic.
+
+`prediction.js` fits the last 20 available observations and projects a linear
+crossing of a deliberately illustrative threshold. Replay truncates the history
+before fitting. This is not validated RUL or a calibrated failure probability.
+Thresholds are not OEM limits. The NASA evaluation metrics do not apply to these
+new scenarios. Selection and review status last for the active visit only;
+export uses the final cycle-60 snapshot and explicitly names the synthetic source.
+
+Run `node --test frontend/tests/*.test.js` for projection edge cases and schema
+checks. CI regenerates scenarios and verifies that tracked data and the packaged
+interface match a fresh build. The aircraft renderer reuses the existing Canvas2D
+fallback when WebGL is unavailable, observes visibility, and honors reduced motion.
+
+Product inspiration: [AFI KLM E&M PROGNOS](https://www.afiklmem.com/en/solutions/about-prognos).
+AeroPredict is an independent academic demonstrator, not an affiliated product
+or a reproduction of proprietary methods or airline operational data.
