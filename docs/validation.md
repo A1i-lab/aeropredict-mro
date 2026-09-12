@@ -48,3 +48,11 @@ Browser-produced screenshots were not recovered. The remote browser's local URL 
 - Selection is local to the active visit, not a shared or persistent work order.
 - The cloud browser download event timed out, but the file was successfully
   downloaded and inspected in the synchronized download directory.
+- Narrow-frame review completed at 375 px content width: no document horizontal
+  overflow; 3D remains visible and the menu navigates by keyboard. This is a
+  browser width test, not a physical-device performance benchmark.
+- GitHub Actions run 34692756243 succeeded for release 02dda3c, including a fresh
+  frontend rebuild and byte-consistency check of the packaged HTML.
+- Two existing Vercel deployment hooks report failure. They are separate from the
+  requested Streamlit deployment, which serves the verified studio. Their hosting
+  configurations have not been changed or their failures represented as resolved.
