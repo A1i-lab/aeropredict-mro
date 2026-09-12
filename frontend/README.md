@@ -42,7 +42,7 @@ Pointer rotation/zoom, touch orbit controls, assembly/cutaway/exploded views,
 optional rotor animation and airflow, component selection and guided tour.
 Every component is accessible through standard buttons outside the 3D canvas.
 Animation defaults to off. Reduced-motion users have no automatic transitions.
-A WebGL failure leaves all data views, selection and CSV export available.
+When WebGL is unavailable, a Canvas 2D software renderer projects the same 3D geometry. Rotation, component selection and exploded views remain available, at reduced detail. Data and CSV export are unchanged.
 Fonts are bundled with OFL licenses in `public/licenses/`.
 
 ## Integration
@@ -50,3 +50,5 @@ Fonts are bundled with OFL licenses in `public/licenses/`.
 `app.py` selects the studio or delegates to `classic_app.py`. The studio uses the
 supported `st.iframe` HTML surface, so no separate API, paid service or new host
 is necessary. Classic views retain the full original evaluation and report access.
+
+For a narrow-layout review on Streamlit, use `?preview=mobile` (390 px frame).

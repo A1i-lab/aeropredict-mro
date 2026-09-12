@@ -4,7 +4,9 @@ from src.views import VIEWS
 ROOT=Path(__file__).resolve().parents[1]
 
 def test_all_pages_render_and_filters_work():
-    at=AppTest.from_file(str(ROOT/'app.py'),default_timeout=30).run()
+    at=AppTest.from_file(str(ROOT/'app.py'),default_timeout=30)
+    at.query_params['experience']='classic'
+    at.run()
     assert not at.exception
     for name in VIEWS:
         at.radio[0].set_value(name).run()

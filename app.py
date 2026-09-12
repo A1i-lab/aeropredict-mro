@@ -1,9 +1,9 @@
-"""Public entrypoint. Studio is opt-in until cloud browser validation completes."""
+"""Public entrypoint for the interactive studio, with original analyses preserved."""
 from pathlib import Path
 import runpy
 import streamlit as st
 ROOT=Path(__file__).resolve().parent
-if st.query_params.get('experience') == 'studio':
+if st.query_params.get('experience', 'studio') != 'classic':
     st.set_page_config(page_title='AeroPredict | Atelier moteur',page_icon=str(ROOT/'assets/favicon.svg'),layout='wide',initial_sidebar_state='collapsed')
     st.markdown('''<style>
     [data-testid="stHeader"]{display:none}
@@ -15,7 +15,7 @@ if st.query_params.get('experience') == 'studio':
     </style>''',unsafe_allow_html=True)
     studio=ROOT/'frontend/studio.html'
     if studio.exists():
-        st.iframe(studio.read_text(),height=1000)
+        st.iframe(studio.read_text(),width=390 if st.query_params.get('preview') == 'mobile' else 'stretch',height=1100)
     else:
         st.error('L’atelier doit être compilé. Les analyses restent disponibles ci-dessous.')
     st.markdown('[Ouvrir les analyses classiques](?experience=classic)',unsafe_allow_html=False)

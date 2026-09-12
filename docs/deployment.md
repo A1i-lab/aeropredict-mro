@@ -12,3 +12,12 @@ Use the current official deployment instructions linked in README.md. Select the
 Open all seven pages. Select several engines. Filter alerts, including an empty result. Change planner capacity and download its CSV. Verify that export rows match the chosen plan, and that actual_rul is excluded. Review chart interactions and tables on desktop and narrow screens. Take polished screenshots of Fleet Overview, Engine Health, Maintenance Planner and Model Performance. Save them in docs/screenshots, add the real Live Demo URL and screenshots to README.md, then commit and push.
 
 Current state: published. Repository: [github.com/A1i-lab/aeropredict-mro](https://github.com/A1i-lab/aeropredict-mro). Live app: [aeropredict-mro.streamlit.app](https://aeropredict-mro.streamlit.app/) (Python 3.12, branch `main`, entrypoint `app.py`). GitHub Actions CI passes on the pinned `requirements.txt`. Screenshots of Fleet Overview, Engine Health, Maintenance Planner and Model Performance are in `docs/screenshots/` and linked from the README. See [validation status](validation.md) for exactly what was checked in the live app and what remains for manual follow-up (scrolled content and CSV download on the cloud deployment, narrow-screen QA).
+
+
+## Engine Studio delivery
+
+`app.py` serves the precompiled `frontend/studio.html` by default and preserves
+all original views through `?experience=classic`. No Node installation or model
+training is required on Streamlit Cloud. Rebuild the frontend before committing
+any changes to frontend sources or prepared prediction data; see frontend/README.md.
+GitHub Actions rebuilds the bundle and rejects stale checked-in HTML.
