@@ -2447,3 +2447,23 @@ footer button {
   z-index: 3;
   pointer-events: none;
 }
+@media (max-width: 520px) {
+  .software-label {
+    top: 47px;
+    left: 22px;
+    right: auto;
+    font-size: 9px;
+  }
+  .part-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .part-strip button {
+    min-height: 44px;
+    padding: 7px;
+  }
+  .part-strip button b {
+    font-size: 11px;
+  }
+}
