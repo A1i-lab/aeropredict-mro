@@ -11,6 +11,22 @@ A clear review workspace for simulated turbofan engines: understand fleet health
 ![Maintenance Planner](docs/screenshots/maintenance-planner.jpg)
 ![Model Performance](docs/screenshots/model-performance.jpg)
 
+
+## Interactive Engine Studio
+
+The default application now opens a French-language React + Three.js workspace:
+explore five engine assemblies, rotate/zoom, reveal the interior, separate sections,
+follow a guided tour, inspect real prepared NASA predictions, filter alerts and
+export a review list. A software renderer keeps the 3D usable without WebGL.
+
+[Open AeroPredict](https://aeropredict-mro.streamlit.app/) ·
+[Original scientific views](https://aeropredict-mro.streamlit.app/?experience=classic)
+
+The 3D is an original simplified teaching model, not certified CAD or a component
+fault diagnosis. GPU rendering was not available in the validation browser;
+software-rendered 3D and the core navigation were verified on the deployed preview.
+See [frontend build and architecture](frontend/README.md) for reproducible builds.
+
 ## Problem and business value
 Sensor histories are difficult to prioritize directly. AeroPredict turns them into RUL estimates, uncertainty intervals and transparent inspection review categories. It demonstrates a decision workflow, not quantified real-world savings or operational safety performance.
 

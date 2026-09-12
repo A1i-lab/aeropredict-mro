@@ -28,3 +28,23 @@ Browser-produced screenshots were not recovered. The remote browser's local URL 
 - Deployed to Streamlit Community Cloud: [aeropredict-mro.streamlit.app](https://aeropredict-mro.streamlit.app/), branch `main`, entrypoint `app.py`, Python 3.12.14 (build log confirmed). No secrets required.
 - Verified in the live cloud app via browser automation: all seven pages render with real data and zero console errors; engine selector tested (ENG-081 → ENG-001, values updated correctly); Prognostics & Alerts empty-result filter tested (searching a nonexistent engine ID correctly showed "No engines match these filters" with zero counts, no exception); Maintenance Planner capacity slider tested (moved to 33, planned reviews/critical-in-plan/chart updated correctly, reset to 10). Screenshots captured from the live app and saved to `docs/screenshots/`.
 - Not verified in this pass: scrolling within the live app to reach content below the fold (CSV download button, full priority-matrix and residual charts, narrow-screen layout) — the browser automation tool could not deliver scroll/wheel events into Streamlit Community Cloud's cross-origin embedding iframe (confirmed via script: the top document reports zero scrollable height and two iframes; mouse clicks reach the iframe correctly, scroll events do not). This is a tool limitation encountered during this session, not an observed app defect — the corresponding logic (CSV export excludes `actual_rul`, planner ranking, empty-filter handling) is covered by the pytest suite, which passes. A manual scroll-through and CSV download check by a human is recommended before treating narrow-screen/scrolled-content QA as complete.
+
+
+## Interactive studio, 12/09/2026
+
+- Recovered the published GitHub revision 9985089 before authoring the redesign.
+- Ten Python tests pass locally, including the original seven views, explicit
+  studio payload parity, exclusion of actual_rul and the studio Streamlit shell.
+- Production Vite build succeeds; scripts, fonts and data are bundled locally.
+- Deployed preview inspected in the Cloud Browser at the actual Streamlit URL.
+- Software-rendered turbine displayed successfully. The validation browser reports
+  WebGL disabled, so GPU rendering is not claimed as visually verified.
+- Five-part guided tour, engine selections 001/050/100, empty search, overview with
+  100 clickable engines, 31 alerts and the 18-engine watch filter verified.
+- Planner verified at capacities 1 and 100; selected engine remains available in
+  the manual selection tab. Downloaded CSV bytes verified for ENG-001, rank 1,
+  source-consistent predictions and no actual_rul column.
+- Results, data/method and About tabs verified against the prepared metrics.
+- Selection is local to the active visit, not a shared or persistent work order.
+- The cloud browser download event timed out, but the file was successfully
+  downloaded and inspected in the synchronized download directory.
