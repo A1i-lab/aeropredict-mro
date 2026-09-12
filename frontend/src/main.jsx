@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
+  Plane,
   Layers3,
   LayoutGrid,
   ArrowUpRight,
@@ -30,6 +31,7 @@ import {
 } from "lucide-react";
 import { createEngine } from "./engine";
 import DATA from "./data.json";
+import { AircraftExperience } from "./AircraftExperience";
 import "./style.css";
 
 const FLEET = [...DATA.fleet].sort(
@@ -336,7 +338,7 @@ function EngineCanvas({
   );
 }
 function App() {
-  const [page, setPage] = useState("studio"),
+  const [page, setPage] = useState("home"),
     [engineId, setEngineId] = useState(81),
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("ALL"),
@@ -447,6 +449,8 @@ function App() {
     } else setPartId(parts[i + 1].id);
   };
   const nav = [
+    ["home", Plane, "Accueil"],
+    ["equipment", ScanLine, "Équipements avion"],
     ["overview", LayoutGrid, "Vue d’ensemble"],
     ["studio", Box, "Atelier moteur"],
     ["alerts", Activity, "Points à examiner"],
@@ -464,14 +468,14 @@ function App() {
           href="#"
           onClick={(e) => {
             e.preventDefault();
-            navigate("studio");
+            navigate("home");
           }}
         >
           <span className="brand-mark">
             A<span>↗</span>
           </span>
           <span>
-            AeroPredict<small>ENGINE STUDIO</small>
+            AeroPredict<small>PREDICTIVE MAINTENANCE</small>
           </span>
         </a>
         <div className="workspace-label">ESPACE DE TRAVAIL</div>
@@ -493,7 +497,8 @@ function App() {
           <div className="dataset">
             <span className="dataset-mark">N</span>
             <div>
-              NASA C-MAPSS<small>FD001 · 100 moteurs simulés</small>
+              NASA + scénarios
+              <small>100 moteurs · 60 équipements fictifs</small>
             </div>
           </div>
           <p>
@@ -510,7 +515,7 @@ function App() {
           >
             À propos du projet <ArrowUpRight size={14} />
           </button>
-          <span className="edition">DÉMONSTRATEUR ACADÉMIQUE · V2</span>
+          <span className="edition">DÉMONSTRATEUR ACADÉMIQUE · V3</span>
         </div>
       </aside>
       {menu && (
@@ -540,6 +545,9 @@ function App() {
           </div>
         </header>
         <main id="main">
+          <div hidden={page !== "home" && page !== "equipment"}>
+            <AircraftExperience mode={page} navigate={navigate} />
+          </div>
           {page === "studio" && (
             <>
               <div className="page-heading">

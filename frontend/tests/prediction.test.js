@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {predict} from '../src/prediction.js';
+import {readFileSync} from 'node:fs';
+const series=(slope,base=0)=>Array.from({length:60},(_,i)=>({cycle:i+1,value:base+slope*(i+1)}));
+test('linear projection recovers a known future threshold crossing',()=>{const p=predict(series(2),160);assert.equal(p.cycles,20);assert.equal(p.status,'priority');});
+test('flat or improving signals do not invent a future crossing',()=>{assert.equal(predict(series(0,10),20).cycles,null);assert.equal(predict(series(-1,100),110).cycles,null);});
+test('a threshold already exceeded has zero horizon',()=>{assert.equal(predict(series(2),100).cycles,0);});
+test('replay uses only measurements available at the chosen cycle',()=>{const s=series(1);const before=predict(s.slice(0,30),100);s[50].value=9999;assert.deepEqual(predict(s.slice(0,30),100),before);assert.equal(before.cycles,70);});
+test('every synthetic record has a unique identity and a complete ordered history',()=>{const d=JSON.parse(readFileSync(new URL('../src/aircraft-data.json',import.meta.url)));assert.equal(d.records.length,60);assert.equal(new Set(d.records.map(r=>r.id)).size,60);assert.equal(d.systems.length,5);for(const r of d.records){assert.equal(r.history.length,60);assert.deepEqual(r.history.map(p=>p.cycle),Array.from({length:60},(_,i)=>i+1));assert(r.history.every(p=>Number.isFinite(p.value)));assert(d.systems.some(s=>s.id===r.system));}});

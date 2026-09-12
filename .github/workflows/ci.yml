@@ -22,7 +22,9 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: python scripts/export_studio_data.py
+      - run: python scripts/generate_aircraft_scenarios.py
       - run: npm ci --prefix frontend
+      - run: node --test frontend/tests/*.test.js
       - run: npm run build --prefix frontend
       - run: python scripts/package_studio.py
-      - run: git diff --exit-code -- frontend/studio.html
+      - run: git diff --exit-code -- frontend/studio.html frontend/src/aircraft-data.json data/synthetic/equipment_signals.csv

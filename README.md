@@ -111,3 +111,14 @@ MIT for original code. Dataset and source paper remain subject to their original
 3. [AFI KLM E&M public PROGNOS presentation](https://vimeo.com/220937470). Public operational inspiration only.
 4. [Streamlit Community Cloud deployment](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app).
 5. [Streamlit navigation API](https://docs.streamlit.io/develop/api-reference/navigation/st.navigation).
+
+### Aircraft welcome and equipment exploration
+
+The public welcome now explains the purpose of predictive maintenance with a
+rotatable, stylised A320-family aircraft. Explore the engine, APU, brakes,
+hydraulic system, cabin air system and flap actuator through labelled zones.
+The original NASA motor analyses remain available. Five additional equipment
+families use 60 separately identified synthetic scenarios (12 fictitious aircraft,
+3,600 observations). Their threshold projections, history replay and exported
+review lists are educational simulations, not validated aircraft fault forecasts.
+See `frontend/README.md` for provenance, limits and reproducible build steps.
