@@ -410,7 +410,11 @@ export function createEngine(host, onSelect, onReady) {
       flow.visible = v;
     },
     reset() {
-      camera.position.set(-6.7, 3.4, 8.0);
+      camera.position
+        .set(-6.7, 3.4, 8.0)
+        .multiplyScalar(
+          Math.max(1, 1.35 / camera.aspect) * (targetExplode ? 1.22 : 1),
+        );
       controls.target.set(0, 0, 0);
       controls.update();
     },
