@@ -1,18 +1,20 @@
 import * as THREE from 'three';
+import { SoftwareRenderer } from './software-renderer';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 // Original procedural teaching model. Not a CAD replica or a fault localisation.
 export function createEngine(host,onSelect,onReady) {
  const scene=new THREE.Scene();
- const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'low-power'});
+ let renderer;try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'low-power'});}catch{renderer=new SoftwareRenderer();}
+ const soft=renderer.software===true; let dirty=true;
  renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.7));
  renderer.setClearColor(0xf3f5f7,0); renderer.outputColorSpace=THREE.SRGBColorSpace;
  renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.45;
  host.appendChild(renderer.domElement); renderer.domElement.setAttribute('aria-label','Maquette 3D de turboréacteur, rotation par glissement. Les composants sont aussi accessibles par les boutons.');
  const camera=new THREE.PerspectiveCamera(34,1,.1,100); camera.position.set(-8.8,4.5,10.5);
  const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.enablePan=false;controls.minDistance=7;controls.maxDistance=22;controls.maxPolarAngle=Math.PI*.8;controls.target.set(0,0,0);
- const pmrem=new THREE.PMREMGenerator(renderer);const room=new RoomEnvironment(); const env=pmrem.fromScene(room,.04);scene.environment=env.texture; room.dispose();pmrem.dispose();
+ let env; if(!soft){const pmrem=new THREE.PMREMGenerator(renderer);const room=new RoomEnvironment();env=pmrem.fromScene(room,.04);scene.environment=env.texture;room.dispose();pmrem.dispose();}
  scene.add(new THREE.HemisphereLight(0xffffff,0xa0aabe,2.5));
  const light=new THREE.DirectionalLight(0xffffff,4);light.position.set(-3,8,6);scene.add(light);
  const rim=new THREE.DirectionalLight(0xa6cfff,2);rim.position.set(4,2,-5);scene.add(rim);
@@ -23,10 +25,10 @@ export function createEngine(host,onSelect,onReady) {
  const sections=['fan','compressor','combustor','turbine','exhaust'].map((id,i)=>{let g=new THREE.Group();g.userData.id=id;g.userData.offset=(i-2)*.82;assembly.add(g);return g;});
  const rotors=[],shells=[],all=[];
  function mesh(g,geo,m,x=0){const o=new THREE.Mesh(geo,m.clone());materials.push(o.material);o.position.x=x;o.userData.id=g.userData.id;g.add(o);all.push(o);return o;}
- function cylinder(g,r1,r2,length,x,m,open=false,start=0,angle=Math.PI*2){const o=mesh(g,new THREE.CylinderGeometry(r1,r2,length,64,1,open,start,angle),m,x);o.rotation.z=Math.PI/2;return o;}
- function ring(g,r,x,m=edge,t=.035){const o=mesh(g,new THREE.TorusGeometry(r,t,8,80),m,x);o.rotation.y=Math.PI/2;return o;}
+ function cylinder(g,r1,r2,length,x,m,open=false,start=0,angle=Math.PI*2){const o=mesh(g,new THREE.CylinderGeometry(r1,r2,length,soft?24:64,1,open,start,angle),m,x);o.rotation.z=Math.PI/2;return o;}
+ function ring(g,r,x,m=edge,t=.035){const o=mesh(g,new THREE.TorusGeometry(r,t,soft?4:8,soft?40:80),m,x);o.rotation.y=Math.PI/2;return o;}
  function bladeGeometry(inner,outer,chord,twist){
-  const points=[],indices=[];const N=10;
+  const points=[],indices=[];const N=soft?5:10;
   for(let j=0;j<=N;j++){let t=j/N,r=inner+(outer-inner)*t;for(let k=0;k<=3;k++){let q=k/3-.5;points.push(q*chord+Math.sin(t*Math.PI)*.13,r,q*chord*twist+t*t*.22);}}
   for(let j=0;j<N;j++)for(let k=0;k<3;k++){let a=j*4+k;indices.push(a,a+4,a+1,a+1,a+4,a+5);}
   let geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(points,3));geo.setIndex(indices);geo.computeVertexNormals();return geo;
@@ -55,16 +57,17 @@ export function createEngine(host,onSelect,onReady) {
  const flowPositions=new Float32Array(150*3);for(let i=0;i<150;i++){const a=i*2.399;let r=i%3===0?1.35:.48;flowPositions[i*3]=-3.6+(i%30)/30*7.6;flowPositions[i*3+1]=Math.cos(a)*r;flowPositions[i*3+2]=Math.sin(a)*r;}
  const flowGeo=new THREE.BufferGeometry();flowGeo.setAttribute('position',new THREE.BufferAttribute(flowPositions,3));const flow=new THREE.Points(flowGeo,new THREE.PointsMaterial({color:0x348cf0,size:.048,transparent:true,opacity:.7}));flow.visible=false;scene.add(flow);
  let selected=null,explode=0,targetExplode=0,cut=true,playing=false,flowing=false,visible=true,disposed=false,last=0;
- const observer=new ResizeObserver(()=>{const w=host.clientWidth,h=host.clientHeight;if(w&&h){renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}});observer.observe(host);
+ const observer=new ResizeObserver(()=>{const w=host.clientWidth,h=host.clientHeight;if(w&&h){renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();dirty=true;}});observer.observe(host);
  const io=new IntersectionObserver(e=>{visible=e[0].isIntersecting;});io.observe(host);
  const raycaster=new THREE.Raycaster();const pointer=new THREE.Vector2();let down;
  function pointerDown(e){down=[e.clientX,e.clientY];}
  function click(e){if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>6)return;let rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);let hit=raycaster.intersectObjects(all).find(h=>h.object.visible&&h.object.parent.visible);if(hit)onSelect(hit.object.userData.id);}
  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',click);
- let animation;function frame(now){animation=requestAnimationFrame(frame);if(disposed||!visible||document.hidden)return;let dt=Math.min((now-last)/1000,.04);last=now;explode+=(targetExplode-explode)*.1;sections.forEach(g=>{g.position.x=g.userData.offset*explode;});
+ controls.addEventListener('change',()=>{dirty=true;});
+ let animation;function frame(now){animation=requestAnimationFrame(frame);if(disposed||!visible||document.hidden)return;if(soft&&now-last<65)return;let dt=Math.min((now-last)/1000,.08);last=now;const moving=Math.abs(targetExplode-explode)>.002;explode+=(targetExplode-explode)*(soft?.28:.1);sections.forEach(g=>{g.position.x=g.userData.offset*explode;});
  if(playing)rotors.forEach((r,i)=>r.rotation.x+=dt*(i===0?.36:.65));
  if(flowing){for(let i=0;i<150;i++){flowPositions[i*3]+=dt*1.25;if(flowPositions[i*3]>3.7)flowPositions[i*3]=-3.6;}flowGeo.attributes.position.needsUpdate=true;}
- controls.update();renderer.render(scene,camera);}
- animation=requestAnimationFrame(frame);onReady?.();
- return {setSelected(id){selected=id;all.forEach(o=>{o.material.emissive.setHex(o.userData.id===selected?0x19536c:0);o.material.emissiveIntensity=o.userData.id===selected?.32:0;});},setExplode(v){targetExplode=v?1:0;},setCut(v){cut=v;shells.forEach(o=>o.visible=!v);},setPlaying(v){playing=v;},setFlow(v){flowing=v;flow.visible=v;},reset(){camera.position.set(-8.8,4.5,10.5);controls.target.set(0,0,0);controls.update();},zoom(delta){camera.position.multiplyScalar(delta);controls.update();},dispose(){disposed=true;cancelAnimationFrame(animation);observer.disconnect();io.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',click);const geos=new Set();scene.traverse(o=>{if(o.geometry)geos.add(o.geometry);});geos.forEach(g=>g.dispose());new Set(materials).forEach(m=>m.dispose());flow.material.dispose();env.dispose();renderer.dispose();renderer.domElement.remove();}};
+ controls.update();if(dirty||playing||flowing||moving){renderer.render(scene,camera);dirty=false;}}
+ animation=requestAnimationFrame(frame);onReady?.(soft);
+ return {setSelected(id){dirty=true;selected=id;all.forEach(o=>{o.material.emissive.setHex(o.userData.id===selected?0x19536c:0);o.material.emissiveIntensity=o.userData.id===selected?.32:0;});},setExplode(v){dirty=true;targetExplode=v?1:0;},setCut(v){dirty=true;cut=v;shells.forEach(o=>o.visible=!v);},setPlaying(v){playing=v;},setFlow(v){dirty=true;flowing=v;flow.visible=v;},reset(){camera.position.set(-8.8,4.5,10.5);controls.target.set(0,0,0);controls.update();},zoom(delta){camera.position.multiplyScalar(delta);controls.update();},dispose(){disposed=true;cancelAnimationFrame(animation);observer.disconnect();io.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',click);const geos=new Set();scene.traverse(o=>{if(o.geometry)geos.add(o.geometry);});geos.forEach(g=>g.dispose());new Set(materials).forEach(m=>m.dispose());flow.material.dispose();env?.dispose();renderer.dispose();renderer.domElement.remove();}};
 }
