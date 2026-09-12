@@ -4,7 +4,12 @@
 A clear review workspace for simulated turbofan engines: understand fleet health, inspect remaining-life estimates and prioritize engineering attention. Built as an independent end-to-end academic product using public NASA C-MAPSS FD001.
 
 ## Live demo
-Cloud publication is pending GitHub account connection and Streamlit authentication. No public URL is claimed. The application runs locally with the commands below.
+[aeropredict-mro.streamlit.app](https://aeropredict-mro.streamlit.app/). Deployed from the `main` branch on Streamlit Community Cloud, Python 3.12. The application also runs locally with the commands below.
+
+![Fleet Overview](docs/screenshots/fleet-overview.jpg)
+![Engine Health](docs/screenshots/engine-health.jpg)
+![Maintenance Planner](docs/screenshots/maintenance-planner.jpg)
+![Model Performance](docs/screenshots/model-performance.jpg)
 
 ## Problem and business value
 Sensor histories are difficult to prioritize directly. AeroPredict turns them into RUL estimates, uncertainty intervals and transparent inspection review categories. It demonstrates a decision workflow, not quantified real-world savings or operational safety performance.
@@ -73,7 +78,7 @@ Training is offline. Streamlit reads cached prepared files only. It does not dow
 | reports/ | Academic report |
 
 ## Validation and screenshots
-See [validation status](docs/validation.md) for exactly which checks were completed. Browser screenshot verification and cloud validation are tracked separately from Python execution tests.
+See [validation status](docs/validation.md) for exactly which checks were completed, including the cloud deployment and browser verification.
 
 ## Limitations
 One simulated operating regime and fault mode. A small single validation split. No cap sensitivity analysis, external industrial validation or calibrated failure probability. Health and priority scores are transparent academic constructions. No anomaly detector is retained without evidence of added value.
