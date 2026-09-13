@@ -910,3 +910,231 @@
   color: inherit;
   text-underline-offset: 3px;
 }
+
+/* Desktop inspection uses the actual iframe viewport, not a fixed 1100px page. */
+@media (min-width: 1050px) {
+  main[data-page] {
+    padding: 18px 24px 0;
+  }
+  .welcome-heading {
+    margin: 0 0 18px;
+    gap: 24px;
+  }
+  .welcome-heading h1 {
+    font-size: clamp(28px, 2.6vw, 42px);
+    margin-top: 8px;
+  }
+  .welcome-heading > p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .aircraft-stage {
+    grid-template-columns: minmax(0, 1fr) 230px;
+  }
+  .aircraft-canvas {
+    height: clamp(360px, calc(100dvh - 255px), 740px);
+  }
+  .aircraft-story {
+    padding: 20px;
+  }
+  .story-number {
+    font-size: 42px;
+    margin-top: 6px;
+  }
+  .aircraft-story h2 {
+    font-size: 21px;
+    margin: 8px 0;
+  }
+  .aircraft-story p {
+    font-size: 12px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .story-note {
+    font-size: 11px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    padding-top: 12px;
+  }
+  .aircraft-zones {
+    margin: 10px 0 24px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .aircraft-zones button {
+    padding: 10px 8px;
+  }
+  .aircraft-hotspot {
+    font-size: 10px;
+    padding: 6px 9px;
+    background: #ffffffe6;
+  }
+  .aircraft-leaders path {
+    opacity: 0.35;
+  }
+  main[data-page="equipment"] .page-heading,
+  main[data-page="studio"] .page-heading {
+    margin-bottom: 12px;
+  }
+  main[data-page="equipment"] .page-heading h1,
+  main[data-page="studio"] .page-heading h1 {
+    font-size: 26px;
+    margin: 4px 0;
+  }
+  main[data-page="equipment"] .page-heading p,
+  main[data-page="studio"] .page-heading p {
+    font-size: 12px;
+    margin: 4px 0 0;
+  }
+  main[data-page="equipment"] .page-heading .eyebrow,
+  main[data-page="studio"] .page-heading .eyebrow {
+    font-size: 9px;
+    margin-bottom: 4px;
+  }
+  .equipment-selectors {
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    gap: 16px;
+  }
+  .equipment-selectors label {
+    flex-direction: row;
+    align-items: center;
+    font-size: 11px;
+  }
+  .equipment-selectors select {
+    padding: 7px 9px;
+    min-width: 0;
+    flex: 1;
+  }
+  .synthetic-label {
+    font-size: 8px;
+    line-height: 1.5;
+  }
+  .equipment-viewer {
+    margin: 0 0 20px;
+    height: calc(100dvh - 230px);
+    min-height: 460px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    grid-template-rows: 78px minmax(0, 1fr) 54px 28px;
+  }
+  .equipment-viewer-title {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 14px 20px 0;
+  }
+  .equipment-viewer-title h2 {
+    font-size: 22px;
+    margin: 4px 0;
+  }
+  .equipment-canvas {
+    grid-column: 1;
+    grid-row: 2;
+    height: 100%;
+    min-height: 0;
+  }
+  .equipment-viewer-controls {
+    grid-column: 1;
+    grid-row: 3;
+    padding: 8px;
+    align-items: center;
+  }
+  .equipment-components {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    display: flex;
+    flex-direction: column;
+    align-self: start;
+    padding: 20px 16px;
+    gap: 8px;
+    border-left: 1px solid #dce5df;
+  }
+  .equipment-components button {
+    padding: 12px;
+    text-align: left;
+  }
+  .equipment-signal-note {
+    grid-column: 2;
+    grid-row: 2 / 5;
+    align-self: end;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    padding: 16px;
+    font-size: 11px;
+  }
+  .equipment-signal-note p {
+    line-height: 1.5;
+  }
+  .equipment-signal-note strong {
+    text-align: left;
+  }
+  .equipment-geometry-note {
+    grid-column: 1;
+    grid-row: 4;
+    padding: 4px 20px;
+    font-size: 9px;
+  }
+  main[data-page="studio"] .studio-layout {
+    height: calc(100dvh - 185px);
+    min-height: 490px;
+    grid-template-columns: 165px minmax(0, 1fr) 220px;
+    gap: 12px;
+  }
+  main[data-page="studio"] .studio {
+    min-height: 0;
+  }
+  main[data-page="studio"] .viewport {
+    height: auto;
+    min-height: 180px;
+  }
+  main[data-page="studio"] .studio-top {
+    padding: 14px 18px 0;
+  }
+  main[data-page="studio"] .engine-list {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  main[data-page="studio"] .list-scroll {
+    height: auto;
+    min-height: 0;
+    flex: 1;
+    overflow: auto;
+  }
+  main[data-page="studio"] .insight {
+    min-height: 0;
+    overflow: auto;
+    padding: 18px;
+  }
+}
+@media (max-width: 1049px) {
+  .equipment-viewer {
+    margin-top: 12px;
+  }
+  .equipment-canvas {
+    height: clamp(300px, 48dvh, 450px);
+  }
+}
+
+@media (min-width: 1050px) {
+  .equipment-side {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    min-height: 0;
+    border-left: 1px solid #dce5df;
+  }
+  .equipment-side .equipment-components {
+    border: 0;
+    width: 100%;
+    padding: 16px 12px;
+    flex-shrink: 0;
+  }
+  .equipment-side .equipment-signal-note {
+    margin-top: auto;
+    border: 0;
+    flex-shrink: 0;
+  }
+}

@@ -11,7 +11,7 @@ if st.query_params.get('experience', 'studio') != 'classic':
     [data-testid="stMainBlockContainer"]{padding:0!important;max-width:none!important}
     [data-testid="stMain"]{background:#f7f8fa}
     [data-testid="stVerticalBlock"]{gap:0}
-    iframe{border:0!important;display:block}
+    iframe{border:0!important;display:block;height:100dvh!important}
     </style>''',unsafe_allow_html=True)
     studio=ROOT/'frontend/studio.html'
     if studio.exists():

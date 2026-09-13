@@ -140,3 +140,32 @@ test("externally served A350-900 preserves real geometry, semantic zones and loc
       assert.ok(Number.isFinite(b.readFloatLE(start + j)));
   }
 });
+
+test('A350 framing fills the desktop stage without clipping its surfaces', async () => {
+  const {readFileSync}=await import('node:fs');
+  const {gunzipSync}=await import('node:zlib');
+  const {frameAircraft}=await import('../src/aircraft-framing.js');
+  const b=gunzipSync(readFileSync(new URL('../../static/models/a350-900.glb.gz',import.meta.url)));
+  const doc=JSON.parse(b.toString('utf8',20,20+b.readUInt32LE(12)));
+  const bin=28+b.readUInt32LE(12), root=new T.Group();root.scale.setScalar(.5);
+  for(const mesh of doc.meshes) for(const primitive of mesh.primitives) {
+    const a=doc.accessors[primitive.attributes.POSITION],v=doc.bufferViews[a.bufferView];
+    const arr=new Float32Array(a.count*3);
+    for(let i=0;i<arr.length;i++)arr[i]=b.readFloatLE(bin+v.byteOffset+i*4);
+    const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.BufferAttribute(arr,3));
+    root.add(new T.Mesh(geometry));
+  }
+  for(const [w,h] of [[812,513],[886,645],[1366,740]]) {
+    const f=frameAircraft(root,w/h), camera=new T.PerspectiveCamera(38,w/h,.1,150);
+    camera.position.copy(f.eye);camera.lookAt(f.target);camera.updateMatrixWorld(true);
+    const box=new T.Box2();
+    root.traverse(o=>{if(o.isMesh){const a=o.geometry.attributes.position;
+      for(let i=0;i<a.count;i++){const p=new T.Vector3().fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld).project(camera);box.expandByPoint(new T.Vector2(p.x,p.y));}
+    }});
+    const fraction=(box.max.x-box.min.x)/2;
+    assert.ok(fraction>=.68 && fraction<=.82,`stage ${w}: ${fraction}`);
+    assert.ok(box.min.x> -1 && box.max.x<1 && box.min.y> -1 && box.max.y<1);
+    assert.ok(box.getCenter(new T.Vector2()).length()<.08);
+  }
+  root.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});
+});

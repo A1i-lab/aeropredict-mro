@@ -1,3 +1,4 @@
+import { createAssemblyMotion } from "./assembly-motion";
 import * as THREE from "three";
 import { SoftwareRenderer } from "./software-renderer";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -307,6 +308,11 @@ export function createEngine(host, onSelect, onReady) {
     visible = true,
     disposed = false,
     last = 0;
+  shells.forEach((o) => {
+    o.material = o.material.clone();
+  });
+  const motion = createAssemblyMotion(sections.length);
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const observer = new ResizeObserver(() => {
     const w = host.clientWidth,
       h = host.clientHeight;
@@ -359,10 +365,33 @@ export function createEngine(host, onSelect, onReady) {
     if (soft && now - last < 65) return;
     let dt = Math.min((now - last) / 1000, 0.08);
     last = now;
-    const moving = Math.abs(targetExplode - explode) > 0.002;
-    explode += (targetExplode - explode) * (soft ? 0.28 : 0.1);
-    sections.forEach((g) => {
-      g.position.x = g.userData.offset * explode;
+    const moving = motion.active;
+    const weights = motion.sample(now);
+    const progress = weights.reduce((a, b) => a + b, 0) / weights.length;
+    camera.position
+      .sub(controls.target)
+      .multiplyScalar((1 + 0.22 * progress) / (1 + 0.22 * explode))
+      .add(controls.target);
+    explode = progress;
+    sections.forEach((g, i) => {
+      g.position.x = g.userData.offset * weights[i];
+    });
+    host.dataset.assemblyState = motion.state;
+    shells.forEach((o) => {
+      const targetOpacity = cut ? 0 : 1;
+      const alpha = reduced
+        ? targetOpacity
+        : THREE.MathUtils.lerp(
+            o.material.opacity,
+            targetOpacity,
+            1 - Math.exp(-dt / 0.16),
+          );
+      if (Math.abs(o.material.opacity - targetOpacity) > 0.001) dirty = true;
+      o.material.opacity =
+        Math.abs(alpha - targetOpacity) < 0.001 ? targetOpacity : alpha;
+      o.material.transparent = o.material.opacity < 1;
+      o.material.depthWrite = o.material.opacity === 1;
+      o.visible = o.material.opacity > 0.001;
     });
     if (playing)
       rotors.forEach((r, i) => (r.rotation.x += dt * (i === 0 ? 0.36 : 0.65)));
@@ -408,20 +437,27 @@ export function createEngine(host, onSelect, onReady) {
     },
     setExplode(v, immediate = false) {
       dirty = true;
-      if (Boolean(targetExplode) !== v)
-        camera.position.multiplyScalar(v ? 1.22 : 1 / 1.22);
       targetExplode = v ? 1 : 0;
-      if (immediate) {
-        explode = targetExplode;
-        sections.forEach((g) => {
-          g.position.x = g.userData.offset * explode;
+      const weights = motion.request(
+        v,
+        performance.now(),
+        immediate || reduced,
+      );
+      if (immediate || reduced) {
+        const progress = targetExplode;
+        camera.position
+          .sub(controls.target)
+          .multiplyScalar((1 + 0.22 * progress) / (1 + 0.22 * explode))
+          .add(controls.target);
+        explode = progress;
+        sections.forEach((g, i) => {
+          g.position.x = g.userData.offset * weights[i];
         });
       }
     },
     setCut(v) {
       dirty = true;
       cut = v;
-      shells.forEach((o) => (o.visible = !v));
     },
     setPlaying(v) {
       playing = v;

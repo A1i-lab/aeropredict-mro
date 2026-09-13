@@ -1,3 +1,4 @@
+import { frameAircraft } from "./aircraft-framing";
 import * as T from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -39,8 +40,8 @@ export function createAircraft(host, onSelect) {
   controls.enablePan = false;
   controls.minDistance = 3;
   controls.maxDistance = 65;
-  scene.add(new T.HemisphereLight(0xffffff, 0x67758a, 1.4));
-  const sun = new T.DirectionalLight(0xffffff, 2.4);
+  scene.add(new T.HemisphereLight(0xffffff, 0x526377, 1.15));
+  const sun = new T.DirectionalLight(0xffffff, 2.1);
   sun.position.set(-8, 15, 8);
   scene.add(sun);
   let floor;
@@ -61,7 +62,7 @@ export function createAircraft(host, onSelect) {
     sun.shadow.bias = -0.0001;
     floor = new T.Mesh(
       new T.PlaneGeometry(70, 70),
-      new T.ShadowMaterial({ color: 0x263344, opacity: 0.19 }),
+      new T.ShadowMaterial({ color: 0x263344, opacity: 0.25 }),
     );
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -1.4;
@@ -104,6 +105,10 @@ export function createAircraft(host, onSelect) {
         return;
       }
       model.root.add(root);
+      focus(null);
+      camera.position.copy(goalCamera);
+      controls.target.copy(goalTarget);
+      controls.update();
       dirty = true;
       status.remove();
     })
@@ -153,8 +158,14 @@ export function createAircraft(host, onSelect) {
         .copy(goalTarget)
         .add(new T.Vector3(-5, 3.4, 6).multiplyScalar(aspect));
     } else {
-      goalTarget.set(0, 0, 0);
-      goalCamera.set(-15.5, 8.2, 23).multiplyScalar(aspect);
+      if (model.root.children.length) {
+        const framing = frameAircraft(model.root, camera.aspect);
+        goalTarget.copy(framing.target);
+        goalCamera.copy(framing.eye);
+      } else {
+        goalTarget.set(0, 0, 0);
+        goalCamera.set(-15.5, 8.2, 23).multiplyScalar(aspect);
+      }
     }
     transition = true;
     dirty = true;
@@ -342,10 +353,13 @@ export function createAircraft(host, onSelect) {
         group.sort((a, b) => a.y - b.y);
         group.forEach((m, i) => {
           const half = m.button.offsetWidth / 2;
-          const bx = side < 0 ? half + 15 : w - half - 15;
+          const bx =
+            side < 0
+              ? Math.max(half + 12, Math.min(w * 0.22, m.x - 65))
+              : Math.min(w - half - 12, Math.max(w * 0.78, m.x + 65));
           const by = active
             ? Math.max(90, Math.min(h - 70, m.y))
-            : h * (0.27 + i * 0.23);
+            : h * (0.25 + i * 0.24);
           m.button.style.left = `${bx}px`;
           m.button.style.top = `${by}px`;
           const edge = bx - side * half;

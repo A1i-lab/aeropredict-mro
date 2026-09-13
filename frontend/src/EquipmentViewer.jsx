@@ -1,3 +1,4 @@
+import { createAssemblyMotion } from "./assembly-motion";
 import React, { useLayoutEffect, useRef, useState } from "react";
 import * as T from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -9,13 +10,13 @@ import { buildEquipmentModel, EQUIPMENT_DETAILS } from "./equipment-models";
 export function EquipmentViewer({ systemId, metric, value, unit }) {
   const host = useRef(null),
     api = useRef(null);
-  const [exploded, setExploded] = useState(true),
+  const [exploded, setExploded] = useState(false),
     [selected, setSelected] = useState(null),
     [error, setError] = useState(false);
   const meta = EQUIPMENT_DETAILS[systemId];
   useLayoutEffect(() => {
     setSelected(null);
-    setExploded(true);
+    setExploded(false);
     setError(false);
     let renderer,
       model,
@@ -65,12 +66,12 @@ export function EquipmentViewer({ systemId, metric, value, unit }) {
       light.position.set(-3, 8, 6);
       scene.add(light);
       model = buildEquipmentModel(scene, systemId);
-      model.setExplode(1);
+      model.setExplode(0);
+      const motion = createAssemblyMotion(model.groups.length);
       let dirty = true,
         visible = true,
         last = 0,
-        explode = 1,
-        goalExplode = 1,
+        explode = 0,
         moving = true;
       const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
       const goal = new T.Vector3(),
@@ -97,11 +98,11 @@ export function EquipmentViewer({ systemId, metric, value, unit }) {
       api.current = {
         view: frameView,
         explode(v) {
-          goalExplode = v ? 1 : 0;
-          frameView(null);
+          motion.request(v, performance.now(), reduced);
+          dirty = true;
         },
         reset() {
-          goalExplode = 0;
+          motion.request(false, performance.now(), reduced);
           frameView(null);
         },
       };
@@ -143,9 +144,16 @@ export function EquipmentViewer({ systemId, metric, value, unit }) {
           dirty = true;
           if (camera.position.distanceTo(eye) < 0.01) moving = false;
         }
-        if (Math.abs(explode - goalExplode) > 0.001) {
-          explode = T.MathUtils.lerp(explode, goalExplode, k);
-          model.setExplode(explode);
+        if (motion.active || dirty) {
+          const weights = motion.sample(t);
+          const progress = weights.reduce((a, b) => a + b, 0) / weights.length;
+          camera.position
+            .sub(controls.target)
+            .multiplyScalar((1 + 0.14 * progress) / (1 + 0.14 * explode))
+            .add(controls.target);
+          explode = progress;
+          model.setExplode(progress, weights);
+          host.current.dataset.assemblyState = motion.state;
           dirty = true;
         }
         controls.update();
@@ -254,29 +262,31 @@ export function EquipmentViewer({ systemId, metric, value, unit }) {
           {meta.sensor}
         </button>
       </div>
-      <div className="equipment-components">
-        {meta.parts.map((part, i) => (
-          <button
-            key={part}
-            aria-pressed={selected === i}
-            onClick={() => choose(i)}
-          >
-            <span>0{i + 1}</span>
-            {part}
-          </button>
-        ))}
-      </div>
-      <div className="equipment-signal-note">
-        <div>
-          <span className="eyebrow">
-            {selected === "sensor" ? meta.sensor : "LIEN AVEC LE SIGNAL"}
-          </span>
-          <p>{meta.signal}</p>
+      <div className="equipment-side">
+        <div className="equipment-components">
+          {meta.parts.map((part, i) => (
+            <button
+              key={part}
+              aria-pressed={selected === i}
+              onClick={() => choose(i)}
+            >
+              <span>0{i + 1}</span>
+              {part}
+            </button>
+          ))}
         </div>
-        <strong>
-          {value} <small>{unit}</small>
-          <span>{metric}</span>
-        </strong>
+        <div className="equipment-signal-note">
+          <div>
+            <span className="eyebrow">
+              {selected === "sensor" ? meta.sensor : "LIEN AVEC LE SIGNAL"}
+            </span>
+            <p>{meta.signal}</p>
+          </div>
+          <strong>
+            {value} <small>{unit}</small>
+            <span>{metric}</span>
+          </strong>
+        </div>
       </div>
       <small className="equipment-geometry-note">
         Formes mécaniques illustratives. Aucun modèle CAO constructeur ni

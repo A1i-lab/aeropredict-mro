@@ -451,11 +451,12 @@ export function buildEquipmentModel(scene, id) {
     sensor,
     meta,
     groups,
-    setExplode(t) {
+    setExplode(t, weights = null) {
       explode = t;
       groups.forEach((g, i) => {
-        g.position.x = g.userData.offset * t;
-        g.position.y = id === "pack" ? (i - 1.5) * 0.15 * t : 0;
+        const progress = weights ? weights[i] : t;
+        g.position.x = g.userData.offset * progress;
+        g.position.y = id === "pack" ? (i - 1.5) * 0.15 * progress : 0;
       });
     },
     highlight(value) {

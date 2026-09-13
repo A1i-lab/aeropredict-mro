@@ -351,8 +351,8 @@ function App() {
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("ALL"),
     [partId, setPartId] = useState(null),
-    [cut, setCut] = useState(true),
-    [exploded, setExploded] = useState(true),
+    [cut, setCut] = useState(false),
+    [exploded, setExploded] = useState(false),
     [playing, setPlaying] = useState(false),
     [airflow, setAirflow] = useState(false),
     [capacity, setCapacity] = useState(10),
@@ -413,7 +413,10 @@ function App() {
     const update = () => {
       if (request !== routeRequest.current) return;
       flushSync(() => {
-        if (p === "studio" && page === "home") setExploded(true);
+        if (p === "studio" && page === "home") {
+          setExploded(false);
+          setCut(false);
+        }
         setPage(p);
         setMenu(false);
       });
@@ -627,7 +630,7 @@ function App() {
             <span className="avatar">AA</span>
           </div>
         </header>
-        <main id="main">
+        <main id="main" data-page={page}>
           <div hidden={page !== "home" && page !== "equipment"}>
             <AircraftExperience
               mode={page}

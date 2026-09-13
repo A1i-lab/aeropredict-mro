@@ -420,7 +420,7 @@ export function AircraftExperience({ mode, navigate, flightBridge }) {
         </div>
       </section>
       {mode === "equipment" && (
-        <section>
+        <section className="equipment-inspection">
           <div className="page-heading">
             <div>
               <span className="eyebrow">
