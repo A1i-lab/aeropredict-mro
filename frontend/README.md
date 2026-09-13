@@ -99,10 +99,15 @@ measurement reference. These are original mechanical teaching illustrations,
 not manufacturer CAD or part-specific failure localisation. All source data,
 thresholds and original NASA predictions are unchanged.
 
-Validation: production compilation and seven JavaScript tests pass, including
-finite geometry, restoration after explosion and a depth-occlusion regression.
-CPU images of all six new models were inspected locally. The updated browser
-journeys have not been validated: the cloud browser blocks the local file URL.
-The current runtime has no pytest installation; Python files were not changed
-and compileall succeeds. Publishing remains pending explicit authorization after
-an automatic approval review rejected a GitHub source-code upload.
+Validation (13/09/2026): the production build and seven JavaScript tests pass,
+including finite geometry, restoration after explosion and depth occlusion.
+CPU images of the airframe and five equipment models were inspected locally.
+GitHub Actions run 34750005961 passed for release 5a94f06, including the pinned
+Python suite and a fresh frontend build with packaged-HTML consistency checking.
+
+The release was published with explicit user approval. Verified in the live
+Streamlit application: aircraft-to-APU navigation, exploded-view control, sensor
+framing control, return to aircraft, aircraft-to-engine navigation, and entry to
+equipment from the lower welcome button. The cloud validation browser has WebGL
+disabled, so these checks exercise the CPU fallback; GPU rendering performance
+and physical mobile-device smoothness are not claimed as verified.
