@@ -1,11 +1,13 @@
 import * as T from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { SoftwareRenderer } from "./software-renderer";
+import { DepthRenderer } from "./depth-renderer";
+import { buildAircraftModel } from "./aircraft-model";
 
 export const ZONES = [
-  { id: "engine", name: "Moteur", position: [-1.8, -0.85, 3.2] },
-  { id: "apu", name: "APU", position: [8.1, 0.2, 0] },
-  { id: "brakes", name: "Freins", position: [1.5, -1.65, 1.4] },
+  { id: "engine", name: "Moteur", position: [-2.5, -1.04, 2.78] },
+  { id: "apu", name: "APU", position: [9.2, 0.46, 0] },
+  { id: "brakes", name: "Freins", position: [1.22, -1.7, 1.3] },
   { id: "hydraulic", name: "Hydraulique", position: [0.7, -0.65, 0] },
   { id: "pack", name: "Air cabine", position: [-0.7, -0.55, -1] },
   { id: "actuator", name: "Actionneur", position: [2.6, 0.12, 5.3] },
@@ -21,7 +23,7 @@ export function createAircraft(host, onSelect) {
       powerPreference: "low-power",
     });
   } catch {
-    renderer = new SoftwareRenderer();
+    renderer = new DepthRenderer();
   }
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   renderer.setClearColor(0xffffff, 0);
@@ -40,224 +42,41 @@ export function createAircraft(host, onSelect) {
   const sun = new T.DirectionalLight(0xffffff, 3);
   sun.position.set(-8, 15, 8);
   scene.add(sun);
-  const white = new T.MeshStandardMaterial({
-    color: 0xe3e9e7,
-    metalness: 0.25,
-    roughness: 0.4,
-  });
-  const green = new T.MeshStandardMaterial({
-    color: 0x2b6658,
-    metalness: 0.18,
-    roughness: 0.45,
-  });
-  const dark = new T.MeshStandardMaterial({
-    color: 0x243b42,
-    metalness: 0.35,
-    roughness: 0.35,
-  });
-  const metal = new T.MeshStandardMaterial({
-    color: 0x8b9b9e,
-    metalness: 0.7,
-    roughness: 0.35,
-  });
-  const mesh = (g, m, p = [0, 0, 0]) => {
-    const o = new T.Mesh(g, m);
-    o.position.set(...p);
-    scene.add(o);
-    return o;
-  };
-  const lathe = (profile, m, p) => {
-    const o = mesh(
-      new T.LatheGeometry(
-        profile.map(([r, x]) => new T.Vector2(r, x)),
-        28,
-      ),
-      m,
-      p,
-    );
-    o.rotation.z = -Math.PI / 2;
-    return o;
-  };
-  lathe(
-    [
-      [0, -9.25],
-      [0.22, -9],
-      [0.54, -8.45],
-      [0.82, -7.7],
-      [0.97, -6.7],
-      [1, -5.7],
-      [1, 4.8],
-      [0.86, 5.9],
-      [0.57, 7.1],
-      [0.28, 8.3],
-      [0.06, 9.1],
-    ],
-    white,
-  );
-  function horizontal(points, y, thickness, material) {
-    const shape = new T.Shape(points.map(([x, z]) => new T.Vector2(x, z)));
-    const g = new T.ExtrudeGeometry(shape, {
-      depth: thickness,
-      bevelEnabled: false,
-    });
-    const o = mesh(g, material, [0, y, 0]);
-    o.rotation.x = Math.PI / 2;
-    return o;
+  let environment;
+  if (!renderer.software) {
+    const pmrem = new T.PMREMGenerator(renderer),
+      room = new RoomEnvironment();
+    environment = pmrem.fromScene(room, 0.04);
+    scene.environment = environment.texture;
+    room.dispose();
+    pmrem.dispose();
+    renderer.toneMapping = T.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.08;
+    const fill = new T.DirectionalLight(0xc9dded, 1.6);
+    fill.position.set(3, 5, -12);
+    scene.add(fill);
+    const rim = new T.DirectionalLight(0xffffff, 2);
+    rim.position.set(8, 8, 4);
+    scene.add(rim);
   }
-  for (const side of [-1, 1]) {
-    horizontal(
-      [
-        [-2, 0.7],
-        [1.55, 8.4],
-        [2.15, 8.8],
-        [3.15, 8.8],
-        [3.2, 7.9],
-        [2.5, 3.4],
-        [3.55, 0.65],
-      ].map(([x, z]) => [x, z * side]),
-      -0.06,
-      0.12,
-      white,
-    );
-    horizontal(
-      [
-        [5.5, 0.55],
-        [7.6, 3.65],
-        [8.5, 3.65],
-        [8.2, 0.35],
-      ].map(([x, z]) => [x, z * side]),
-      0.45,
-      0.1,
-      white,
-    );
-    horizontal(
-      [
-        [1.55, 8.4],
-        [1.75, 8.6],
-        [2.5, 8.6],
-        [3.15, 8.8],
-      ].map(([x, z]) => [x, z * side]),
-      0.5,
-      0.09,
-      green,
-    );
-    horizontal(
-      [
-        [0.8, 3.5],
-        [2.4, 7.4],
-        [2.85, 7.4],
-        [2.35, 3.5],
-      ].map(([x, z]) => [x, z * side]),
-      0.015,
-      0.035,
-      metal,
-    );
-    lathe(
-      [
-        [0.58, -1.25],
-        [0.67, -1.1],
-        [0.72, -0.7],
-        [0.68, 0.5],
-        [0.49, 1.05],
-      ],
-      white,
-      [-1, -1, side * 3.15],
-    );
-    const fan = mesh(new T.CylinderGeometry(0.53, 0.53, 0.08, 24), dark, [
-      -2.18,
-      -1,
-      side * 3.15,
-    ]);
-    fan.rotation.z = Math.PI / 2;
-    for (let k = 0; k < 14; k++) {
-      const a = (k * Math.PI * 2) / 14;
-      const blade = mesh(new T.BoxGeometry(0.05, 0.36, 0.075), metal, [
-        -2.24,
-        -1 + Math.cos(a) * 0.28,
-        side * 3.15 + Math.sin(a) * 0.28,
-      ]);
-      blade.rotation.x = a + 0.35;
-    }
-    const cone = mesh(new T.ConeGeometry(0.15, 0.35, 16), metal, [
-      -2.38,
-      -1,
-      side * 3.15,
-    ]);
-    cone.rotation.z = Math.PI / 2;
-    mesh(new T.BoxGeometry(1.2, 0.65, 0.17), white, [
-      -0.65,
-      -0.48,
-      side * 3.15,
-    ]);
-    for (let i = 0; i < 30; i++) {
-      const x = -5.7 + i * 0.34;
-      const win = mesh(new T.SphereGeometry(0.087, 6, 6), dark, [
-        x,
-        0.4,
-        side * 0.913,
-      ]);
-      win.scale.set(0.65, 1, 0.15);
-    }
-    for (const x of [-6.35, 4.6]) {
-      const door = mesh(new T.BoxGeometry(0.32, 0.62, 0.025), metal, [
-        x,
-        0.2,
-        side * 0.97,
-      ]);
-      mesh(new T.BoxGeometry(0.28, 0.57, 0.03), white, [x, 0.2, side * 0.99]);
-    }
-    const cockpit = mesh(new T.SphereGeometry(0.35, 8, 6), dark, [
-      -7.65,
-      0.42,
-      side * 0.53,
-    ]);
-    cockpit.scale.set(1, 0.52, 0.55);
-    cockpit.rotation.y = side * 0.4;
-    mesh(new T.CylinderGeometry(0.06, 0.06, 0.85, 8), metal, [
-      1.35,
-      -1.3,
-      side * 1.4,
-    ]);
-    const wheel = mesh(new T.CylinderGeometry(0.25, 0.25, 0.32, 12), dark, [
-      1.35,
-      -1.8,
-      side * 1.4,
-    ]);
-    wheel.rotation.x = Math.PI / 2;
-  }
-  const tail = new T.Shape([
-    new T.Vector2(5.05, 0.55),
-    new T.Vector2(7.1, 3.65),
-    new T.Vector2(8.45, 3.65),
-    new T.Vector2(8.1, 0.25),
-  ]);
-  mesh(
-    new T.ExtrudeGeometry(tail, { depth: 0.13, bevelEnabled: false }),
-    green,
-    [0, 0, -0.065],
-  );
-  mesh(new T.CylinderGeometry(0.05, 0.05, 0.7, 8), metal, [-6.2, -1.12, 0]);
-  const noseWheel = mesh(
-    new T.CylinderGeometry(0.19, 0.19, 0.22, 12),
-    dark,
-    [-6.2, -1.55, 0],
-  );
-  noseWheel.rotation.x = Math.PI / 2;
-  const tailpipe = mesh(
-    new T.CylinderGeometry(0.09, 0.09, 0.18, 12),
-    dark,
-    [9, 0.03, 0],
-  );
-  tailpipe.rotation.z = Math.PI / 2;
+  const model = buildAircraftModel(scene, {
+    detail: renderer.software ? 0 : 1,
+  });
   let active = null,
     dirty = true,
     transition = true,
     disposed = false,
     visible = true,
     last = 0;
+  let focusDone = null;
   const goalTarget = new T.Vector3(),
     goalCamera = new T.Vector3();
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ns = "http://www.w3.org/2000/svg";
+  const leaders = document.createElementNS(ns, "svg");
+  leaders.classList.add("aircraft-leaders");
+  leaders.setAttribute("aria-hidden", "true");
+  host.append(leaders);
   const markers = ZONES.map((zone) => {
     const button = document.createElement("button");
     button.className = "aircraft-hotspot";
@@ -265,9 +84,15 @@ export function createAircraft(host, onSelect) {
     button.setAttribute("aria-label", `Explorer : ${zone.name}`);
     button.addEventListener("click", () => onSelect(zone.id));
     host.append(button);
-    return { zone, button };
+    const line = document.createElementNS(ns, "path");
+    const dot = document.createElementNS(ns, "circle");
+    dot.setAttribute("r", "3");
+    leaders.append(line, dot);
+    return { zone, button, line, dot };
   });
   function focus(id) {
+    focusDone?.(false);
+    focusDone = null;
     active = id;
     const zone = ZONES.find((z) => z.id === id);
     const aspect = Math.max(1, 1.35 / camera.aspect);
@@ -278,14 +103,45 @@ export function createAircraft(host, onSelect) {
         .add(new T.Vector3(-5, 3.4, 6).multiplyScalar(aspect));
     } else {
       goalTarget.set(0, 0, 0);
-      goalCamera.set(-16, 12, 21).multiplyScalar(aspect);
+      goalCamera.set(-15.5, 8.2, 23).multiplyScalar(aspect);
     }
     transition = true;
     dirty = true;
     markers.forEach(({ zone, button }) =>
       button.setAttribute("aria-pressed", String(zone.id === id)),
     );
+    return new Promise((resolve) => {
+      focusDone = resolve;
+    });
   }
+  let down = null;
+  const pointerDown = (e) => {
+    down = [e.clientX, e.clientY];
+  };
+  const pointerUp = (e) => {
+    if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5)
+      return;
+    const rect = renderer.domElement.getBoundingClientRect();
+    const ray = new T.Raycaster();
+    ray.setFromCamera(
+      new T.Vector2(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        1 - ((e.clientY - rect.top) / rect.height) * 2,
+      ),
+      camera,
+    );
+    const hit = ray.intersectObject(model.root, true)[0];
+    if (hit) {
+      const nearest = ZONES.map((z) => ({
+        z,
+        d: new T.Vector3(...z.position).distanceTo(hit.point),
+      })).sort((a, b) => a.d - b.d)[0];
+      if (nearest.d < 2.1) onSelect(nearest.z.id);
+    }
+    down = null;
+  };
+  renderer.domElement.addEventListener("pointerdown", pointerDown);
+  renderer.domElement.addEventListener("pointerup", pointerUp);
   const resize = () => {
     const w = host.clientWidth,
       h = host.clientHeight;
@@ -299,6 +155,8 @@ export function createAircraft(host, onSelect) {
   resizeObserver.observe(host);
   controls.addEventListener("start", () => {
     transition = false;
+    focusDone?.(false);
+    focusDone = null;
   });
   controls.addEventListener("change", () => {
     dirty = true;
@@ -318,28 +176,72 @@ export function createAircraft(host, onSelect) {
     frame = requestAnimationFrame(animate);
     if (!visible || document.hidden || t - last < (renderer.software ? 60 : 16))
       return;
+    const blend = reduced ? 1 : 1 - Math.exp(-Math.min(120, t - last) / 125);
     last = t;
     if (transition) {
-      camera.position.lerp(goalCamera, reduced ? 1 : 0.14);
-      controls.target.lerp(goalTarget, reduced ? 1 : 0.14);
+      camera.position.lerp(goalCamera, blend);
+      controls.target.lerp(goalTarget, blend);
       dirty = true;
       if (camera.position.distanceTo(goalCamera) < 0.015) {
         camera.position.copy(goalCamera);
         controls.target.copy(goalTarget);
         transition = false;
+        focusDone?.(true);
+        focusDone = null;
       }
     }
     controls.update();
     if (dirty) {
       renderer.render(scene, camera);
-      for (const { zone, button } of markers) {
-        const p = new T.Vector3(...zone.position).project(camera);
-        button.style.left = `${(p.x * 0.5 + 0.5) * 100}%`;
-        button.style.top = `${(-p.y * 0.5 + 0.5) * 100}%`;
-        button.style.visibility =
-          Math.abs(p.x) > 1 || Math.abs(p.y) > 1 || p.z > 1
-            ? "hidden"
-            : "visible";
+      const w = host.clientWidth,
+        h = host.clientHeight;
+      leaders.setAttribute("viewBox", `0 0 ${w} ${h}`);
+      const projected = markers.map((m) => {
+        const p = new T.Vector3(...m.zone.position).project(camera);
+        return {
+          ...m,
+          x: (p.x * 0.5 + 0.5) * w,
+          y: (-p.y * 0.5 + 0.5) * h,
+          show:
+            Math.abs(p.x) <= 1 &&
+            Math.abs(p.y) <= 1 &&
+            p.z <= 1 &&
+            (!active || active === m.zone.id),
+        };
+      });
+      // Labels occupy two gutters; their projected anchors stay on the actual geometry.
+      const ordered = projected.filter((m) => m.show).sort((a, b) => a.x - b.x);
+      const split = active
+        ? ordered[0]?.x < w / 2
+          ? 1
+          : 0
+        : Math.ceil(ordered.length / 2);
+      for (const [side, group] of [
+        [-1, ordered.slice(0, split)],
+        [1, ordered.slice(split)],
+      ]) {
+        group.sort((a, b) => a.y - b.y);
+        group.forEach((m, i) => {
+          const half = m.button.offsetWidth / 2;
+          const bx = side < 0 ? half + 15 : w - half - 15;
+          const by = active
+            ? Math.max(90, Math.min(h - 70, m.y))
+            : h * (0.27 + i * 0.23);
+          m.button.style.left = `${bx}px`;
+          m.button.style.top = `${by}px`;
+          const edge = bx - side * half;
+          m.line.setAttribute(
+            "d",
+            `M${m.x},${m.y} L${edge - side * 16},${by} L${edge},${by}`,
+          );
+          m.dot.setAttribute("cx", m.x);
+          m.dot.setAttribute("cy", m.y);
+        });
+      }
+      for (const m of projected) {
+        m.button.style.visibility = m.show ? "visible" : "hidden";
+        m.line.style.display = m.dot.style.display = m.show ? "" : "none";
+        m.line.classList.toggle("active", m.zone.id === active);
       }
       dirty = false;
     }
@@ -349,14 +251,17 @@ export function createAircraft(host, onSelect) {
     focus,
     dispose() {
       disposed = true;
+      focusDone?.(false);
+      focusDone = null;
       cancelAnimationFrame(frame);
       resizeObserver.disconnect();
       observer.disconnect();
       controls.dispose();
-      scene.traverse((o) => {
-        o.geometry?.dispose();
-      });
-      [white, green, dark, metal].forEach((m) => m.dispose());
+      renderer.domElement.removeEventListener("pointerdown", pointerDown);
+      renderer.domElement.removeEventListener("pointerup", pointerUp);
+      model.dispose();
+      environment?.dispose();
+      leaders.remove();
       renderer.dispose?.();
       renderer.domElement.remove();
       markers.forEach((m) => m.button.remove());

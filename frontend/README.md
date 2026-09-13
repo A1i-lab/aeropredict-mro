@@ -81,3 +81,28 @@ fallback when WebGL is unavailable, observes visibility, and honors reduced moti
 Product inspiration: [AFI KLM E&M PROGNOS](https://www.afiklmem.com/en/solutions/about-prognos).
 AeroPredict is an independent academic demonstrator, not an affiliated product
 or a reproduction of proprietary methods or airline operational data.
+
+## Aircraft and equipment continuity (13/09/2026)
+
+The new procedural airframe uses a smooth fuselage loft, six windscreen panes,
+profiled wings, joined winglets, hollow intakes and paired gear wheels. Screen-space
+leader lines place zone labels outside the airframe. CPU depth buffering prevents
+flush windows and panel details from drawing through the fuselage. The original
+engine geometry and its software rendering path are preserved.
+
+Selecting an aircraft zone (or a nearby surface) focuses the camera before opening
+its destination. View Transitions share the scene between aircraft and equipment;
+returning to the aircraft restores the wide camera. Browsers without View
+Transitions use a fade/scale fallback. Reduced-motion settings skip this motion.
+Five non-engine equipment assemblies have component framing, exploded views and a
+measurement reference. These are original mechanical teaching illustrations,
+not manufacturer CAD or part-specific failure localisation. All source data,
+thresholds and original NASA predictions are unchanged.
+
+Validation: production compilation and seven JavaScript tests pass, including
+finite geometry, restoration after explosion and a depth-occlusion regression.
+CPU images of all six new models were inspected locally. The updated browser
+journeys have not been validated: the cloud browser blocks the local file URL.
+The current runtime has no pytest installation; Python files were not changed
+and compileall succeeds. Publishing remains pending explicit authorization after
+an automatic approval review rejected a GitHub source-code upload.

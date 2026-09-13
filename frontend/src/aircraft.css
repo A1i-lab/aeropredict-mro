@@ -680,3 +680,201 @@
     animation: none;
   }
 }
+
+/* Screen-space leaders leave the airframe unobstructed. */
+.aircraft-leaders {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.aircraft-leaders path {
+  fill: none;
+  stroke: #829b90;
+  stroke-width: 1;
+  opacity: 0.62;
+}
+.aircraft-leaders path.active {
+  stroke: #2e6254;
+  opacity: 0.9;
+}
+.aircraft-leaders circle {
+  fill: #fff;
+  stroke: #557b68;
+  stroke-width: 1.4;
+}
+.aircraft-hotspot {
+  box-shadow: 0 2px 8px #2c4b4009;
+  border-color: #b7c9bf;
+  font-family: inherit;
+}
+.aircraft-hotspot:focus-visible {
+  outline: 2px solid #2e6254;
+  outline-offset: 3px;
+}
+
+.equipment-viewer {
+  border: 1px solid #dce5df;
+  border-radius: 14px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 35%, #fff, #f1f5f3);
+  margin: 22px 0;
+}
+.equipment-viewer-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  padding: 25px 28px 0;
+}
+.equipment-viewer-title h2 {
+  margin: 8px 0;
+  font-size: 24px;
+  letter-spacing: -0.7px;
+}
+.equipment-viewer-title p {
+  margin: 0;
+  color: #758780;
+  font-size: 13px;
+}
+.equipment-canvas {
+  width: 100%;
+  height: 410px;
+}
+.equipment-canvas canvas {
+  display: block;
+}
+.equipment-viewer-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 18px 20px;
+}
+.equipment-viewer-controls [aria-pressed="true"] {
+  background: #dde9e2;
+  border-color: #8ba798;
+  color: #285b4c;
+}
+.equipment-components {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid #dae4dd;
+  border-bottom: 1px solid #dae4dd;
+}
+.equipment-components button {
+  border: 0;
+  border-right: 1px solid #dae4dd;
+  background: #ffffff70;
+  padding: 17px 12px;
+  color: #4c655a;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.equipment-components button span {
+  display: block;
+  font-size: 10px;
+  color: #8ca193;
+  margin-bottom: 7px;
+}
+.equipment-components button[aria-pressed="true"] {
+  background: #deebe2;
+}
+.equipment-signal-note {
+  display: flex;
+  justify-content: space-between;
+  gap: 25px;
+  padding: 23px 28px;
+  align-items: center;
+}
+.equipment-signal-note p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #677c70;
+  max-width: 570px;
+  margin: 6px 0;
+}
+.equipment-signal-note strong {
+  font-size: 26px;
+  font-weight: 500;
+  color: #335e50;
+  white-space: nowrap;
+  text-align: right;
+}
+.equipment-signal-note strong small {
+  font-size: 13px;
+}
+.equipment-signal-note strong span {
+  display: block;
+  font-size: 11px;
+  color: #82988b;
+  margin-top: 7px;
+  white-space: normal;
+}
+.equipment-geometry-note {
+  display: block;
+  font-size: 10px;
+  color: #83958b;
+  padding: 0 28px 20px;
+}
+::view-transition-group(airframe-scene) {
+  animation-duration: 650ms;
+  animation-timing-function: cubic-bezier(0.22, 0.7, 0.15, 1);
+}
+::view-transition-old(airframe-scene) {
+  animation: scene-depart 650ms ease both;
+}
+::view-transition-new(airframe-scene) {
+  animation: scene-arrive 650ms ease both;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 300ms;
+}
+@keyframes scene-depart {
+  to {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+@keyframes scene-arrive {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (max-width: 650px) {
+  .equipment-components {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .equipment-canvas {
+    height: 320px;
+  }
+  .equipment-signal-note {
+    flex-direction: column;
+    align-items: start;
+  }
+  .equipment-signal-note strong {
+    text-align: left;
+  }
+  .equipment-viewer-title {
+    padding: 20px 18px 0;
+  }
+  .equipment-viewer-title h2 {
+    font-size: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

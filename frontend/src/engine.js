@@ -382,6 +382,20 @@ export function createEngine(host, onSelect, onReady) {
   animation = requestAnimationFrame(frame);
   onReady?.(soft);
   return {
+    renderNow() {
+      const w = host.clientWidth,
+        h = host.clientHeight;
+      if (!w || !h) return;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      camera.position
+        .set(-6.7, 3.4, 8.0)
+        .multiplyScalar(Math.max(1, 1.35 / camera.aspect));
+      controls.update();
+      renderer.render(scene, camera);
+      dirty = false;
+    },
     setSelected(id) {
       dirty = true;
       selected = id;
