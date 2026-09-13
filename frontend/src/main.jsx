@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { flushSync } from "react-dom";
 import {
   Plane,
   Layers3,
@@ -278,7 +279,7 @@ function EngineCanvas({
     [software, setSoftware] = useState(false);
   const callback = useRef(onSelect);
   callback.current = onSelect;
-  useEffect(() => {
+  useLayoutEffect(() => {
     let api;
     try {
       api = createEngine(
@@ -292,6 +293,7 @@ function EngineCanvas({
       apiRef.current = api;
       api.setCut(cut);
       api.setSelected(selectedPart);
+      api.renderNow();
     } catch (e) {
       setError(true);
       console.error("3D unavailable", e);
@@ -318,7 +320,12 @@ function EngineCanvas({
   }, [airflow]);
   return (
     <>
-      <div ref={host} className="engine-canvas" data-ready={ready} />
+      <div
+        ref={host}
+        className="engine-canvas"
+        data-ready={ready}
+        style={{ viewTransitionName: "airframe-scene" }}
+      />
       {software && (
         <span className="software-label">
           Rendu compatible · même maquette 3D
@@ -355,6 +362,9 @@ function App() {
     [menu, setMenu] = useState(false),
     [sensor, setSensor] = useState("s4"),
     [aboutTab, setAboutTab] = useState("results");
+  const flightBridge = useRef(null),
+    activeTransition = useRef(null),
+    routeRequest = useRef(0);
   const api = useRef(null),
     toastTimer = useRef(null);
   const engine = FLEET.find((e) => e.unit === engineId) || FLEET[0],
@@ -373,10 +383,61 @@ function App() {
     toastTimer.current = setTimeout(() => setToast(""), 3500);
   };
   useEffect(() => () => clearTimeout(toastTimer.current), []);
-  const navigate = (p) => {
-    setPage(p);
-    setMenu(false);
-    window.scrollTo({ top: 0, behavior: "instant" });
+  const navigate = async (p, { direct = false } = {}) => {
+    if (p === page) return;
+    const request = ++routeRequest.current;
+    if (
+      !direct &&
+      page === "home" &&
+      (p === "studio" || p === "equipment") &&
+      flightBridge.current
+    ) {
+      return flightBridge.current.enter(p === "studio" ? "engine" : "apu");
+    }
+    activeTransition.current?.skipTransition?.();
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const update = () => {
+      if (request !== routeRequest.current) return;
+      flushSync(() => {
+        setPage(p);
+        setMenu(false);
+      });
+      window.scrollTo({ top: 0, behavior: "instant" });
+    };
+    if (document.startViewTransition && !reduced) {
+      const transition = document.startViewTransition(update);
+      activeTransition.current = transition;
+      try {
+        await transition.finished;
+      } catch {
+        /* Superseded by a newer destination. */
+      }
+    } else if (!reduced) {
+      const main = document.getElementById("main");
+      await main.animate(
+        [
+          { opacity: 1, transform: "scale(1)" },
+          { opacity: 0, transform: "scale(1.025)" },
+        ],
+        { duration: 180, easing: "ease-in", fill: "forwards" },
+      ).finished;
+      update();
+      main.getAnimations().forEach((a) => a.cancel());
+      await main.animate(
+        [
+          { opacity: 0, transform: "scale(.975)" },
+          { opacity: 1, transform: "scale(1)" },
+        ],
+        { duration: 260, easing: "ease-out" },
+      ).finished;
+    } else update();
+    if (request !== routeRequest.current) return;
+    if (p === "home") flightBridge.current?.reset();
+    const heading = document.querySelector("#main h1:not([hidden])");
+    if (heading && heading.getClientRects().length) {
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+    }
   };
   const select = (e) => {
     setEngineId(e.unit);
@@ -546,7 +607,11 @@ function App() {
         </header>
         <main id="main">
           <div hidden={page !== "home" && page !== "equipment"}>
-            <AircraftExperience mode={page} navigate={navigate} />
+            <AircraftExperience
+              mode={page}
+              navigate={navigate}
+              flightBridge={flightBridge}
+            />
           </div>
           {page === "studio" && (
             <>

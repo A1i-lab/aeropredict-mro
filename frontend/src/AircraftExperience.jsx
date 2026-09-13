@@ -13,6 +13,7 @@ import { createAircraft, ZONES } from "./aircraft";
 import AIRCRAFT from "./aircraft-data.json";
 import { predict, STATUS } from "./prediction";
 import "./aircraft.css";
+import { EquipmentViewer } from "./EquipmentViewer";
 const systems = AIRCRAFT.systems;
 const aircraftIds = [...new Set(AIRCRAFT.records.map((r) => r.aircraft))];
 const num = (n, d = 1) =>
@@ -97,7 +98,7 @@ function Trend({ history, system }) {
     </div>
   );
 }
-export function AircraftExperience({ mode, navigate }) {
+export function AircraftExperience({ mode, navigate, flightBridge }) {
   const [zone, setZone] = useState(null),
     [aircraft, setAircraft] = useState("DEMO-001"),
     [systemId, setSystemId] = useState("apu"),
@@ -106,10 +107,22 @@ export function AircraftExperience({ mode, navigate }) {
     [queue, setQueue] = useState([]),
     [queueOnly, setQueueOnly] = useState(false),
     [reviewed, setReviewed] = useState([]),
-    [notice, setNotice] = useState("");
+    [notice, setNotice] = useState(""),
+    [travelling, setTravelling] = useState(false);
   const host = useRef(null),
     api = useRef(null),
-    selectRef = useRef(setZone);
+    selectRef = useRef(null),
+    journey = useRef(0),
+    modeRef = useRef(mode);
+  modeRef.current = mode;
+  selectRef.current = enter;
+  flightBridge.current = {
+    enter,
+    reset() {
+      setZone(null);
+      api.current?.focus(null);
+    },
+  };
   useEffect(() => {
     try {
       api.current = createAircraft(host.current, (id) => selectRef.current(id));
@@ -118,11 +131,12 @@ export function AircraftExperience({ mode, navigate }) {
         "La vue 3D n’est pas disponible. Tous les équipements restent accessibles par les boutons.",
       );
     }
-    return () => api.current?.dispose();
+    return () => {
+      journey.current++;
+      api.current?.dispose();
+    };
   }, []);
-  useEffect(() => {
-    api.current?.focus(zone);
-  }, [zone]);
+
   const selected = systems.find((s) => s.id === zone);
   const record = AIRCRAFT.records.find(
     (r) => r.aircraft === aircraft && r.system === systemId,
@@ -145,11 +159,35 @@ export function AircraftExperience({ mode, navigate }) {
       (statusFilter === "all" || r.p.status === statusFilter) &&
       (!queueOnly || queue.includes(r.id)),
   );
+  async function enter(id, ac = aircraft) {
+    const token = ++journey.current;
+    setZone(id);
+    setTravelling(true);
+    if (id !== "engine") {
+      setSystemId(id);
+      setAircraft(ac);
+      setCycle(60);
+    }
+    if (modeRef.current === "home" && api.current) {
+      const finished = await api.current.focus(id);
+      if (
+        !finished ||
+        token !== journey.current ||
+        modeRef.current !== "home"
+      ) {
+        setTravelling(false);
+        return;
+      }
+    }
+    await navigate(id === "engine" ? "studio" : "equipment", { direct: true });
+    if (token === journey.current) setTravelling(false);
+  }
   function openEquipment(id, ac = aircraft) {
+    if (modeRef.current === "home") return enter(id, ac);
     setSystemId(id);
     setAircraft(ac);
     setCycle(60);
-    navigate("equipment");
+    navigate("equipment", { direct: true });
   }
   function toggleQueue() {
     setQueue((q) =>
@@ -200,7 +238,7 @@ export function AircraftExperience({ mode, navigate }) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   return (
-    <div className="aircraft-experience">
+    <div className="aircraft-experience" aria-busy={travelling}>
       <section hidden={mode !== "home"}>
         <div className="welcome-heading">
           <div>
@@ -236,7 +274,11 @@ export function AircraftExperience({ mode, navigate }) {
                 <RotateCcw size={17} />
               </button>
             </div>
-            <div className="aircraft-canvas" ref={host} />
+            <div
+              className="aircraft-canvas"
+              ref={host}
+              style={{ viewTransitionName: "airframe-scene" }}
+            />
             <div className="aircraft-scale">
               <span>Glisser pour tourner · Molette pour zoomer</span>
               <span>Maquette stylisée, positions indicatives</span>
@@ -275,15 +317,13 @@ export function AircraftExperience({ mode, navigate }) {
             </div>
             <button
               className="button primary"
-              onClick={() =>
-                zone === "engine"
-                  ? navigate("studio")
-                  : selected
-                    ? openEquipment(zone)
-                    : setZone("engine")
-              }
+              onClick={() => enter(zone || "engine")}
             >
-              {zone ? "Ouvrir le suivi" : "Explorer le moteur"}
+              {travelling
+                ? "Ouverture du suivi…"
+                : zone
+                  ? "Ouvrir le suivi"
+                  : "Explorer le moteur"}
               <ArrowRight size={17} />
             </button>
             <small>
@@ -301,7 +341,7 @@ export function AircraftExperience({ mode, navigate }) {
             <button
               key={z.id}
               aria-pressed={zone === z.id}
-              onClick={() => setZone(z.id)}
+              onClick={() => enter(z.id)}
             >
               <span>{String(i + 1).padStart(2, "0")}</span>
               {z.name}
@@ -416,6 +456,12 @@ export function AircraftExperience({ mode, navigate }) {
               <span>60 cycles observés par équipement</span>
             </div>
           </div>
+          <EquipmentViewer
+            systemId={systemId}
+            metric={system.metric}
+            value={num(history.at(-1).value)}
+            unit={system.unit}
+          />
           <div className="equipment-detail">
             <div className="equipment-history">
               <span className="eyebrow">
