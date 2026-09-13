@@ -2,17 +2,17 @@ import * as T from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { DepthRenderer } from "./depth-renderer";
-import { buildAircraftModel } from "./aircraft-model";
+import { loadAircraftModel, disposeAircraft } from "./aircraft-asset";
 
 export const ZONES = [
   { id: "engine", name: "Moteur", position: [-2.5, -1.04, 2.78] },
   { id: "apu", name: "APU", position: [9.2, 0.46, 0] },
-  { id: "brakes", name: "Freins", position: [1.22, -1.7, 1.3] },
+  { id: "brakes", name: "Freins", position: [-0.56, -1.92, 1.94] },
   { id: "hydraulic", name: "Hydraulique", position: [0.7, -0.65, 0] },
   { id: "pack", name: "Air cabine", position: [-0.7, -0.55, -1] },
   { id: "actuator", name: "Actionneur", position: [2.6, 0.12, 5.3] },
 ];
-// Original, stylised A320-family teaching geometry. No manufacturer CAD or livery.
+// Detailed FlightGear A320neo exterior. Attribution and editable sources in the repo.
 export function createAircraft(host, onSelect) {
   const scene = new T.Scene();
   let renderer;
@@ -38,10 +38,35 @@ export function createAircraft(host, onSelect) {
   controls.enablePan = false;
   controls.minDistance = 3;
   controls.maxDistance = 65;
-  scene.add(new T.HemisphereLight(0xffffff, 0x7c9091, 3));
-  const sun = new T.DirectionalLight(0xffffff, 3);
+  scene.add(new T.HemisphereLight(0xffffff, 0x67758a, 1.4));
+  const sun = new T.DirectionalLight(0xffffff, 2.4);
   sun.position.set(-8, 15, 8);
   scene.add(sun);
+  let floor;
+  if (!renderer.software) {
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = T.PCFSoftShadowMap;
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    Object.assign(sun.shadow.camera, {
+      left: -15,
+      right: 15,
+      top: 15,
+      bottom: -15,
+      near: 0.5,
+      far: 50,
+    });
+    sun.shadow.normalBias = 0.025;
+    sun.shadow.bias = -0.0001;
+    floor = new T.Mesh(
+      new T.PlaneGeometry(70, 70),
+      new T.ShadowMaterial({ color: 0x263344, opacity: 0.19 }),
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -2.2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+  }
   let environment;
   if (!renderer.software) {
     const pmrem = new T.PMREMGenerator(renderer),
@@ -51,7 +76,7 @@ export function createAircraft(host, onSelect) {
     room.dispose();
     pmrem.dispose();
     renderer.toneMapping = T.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.08;
+    renderer.toneMappingExposure = 0.9;
     const fill = new T.DirectionalLight(0xc9dded, 1.6);
     fill.position.set(3, 5, -12);
     scene.add(fill);
@@ -59,9 +84,34 @@ export function createAircraft(host, onSelect) {
     rim.position.set(8, 8, 4);
     scene.add(rim);
   }
-  const model = buildAircraftModel(scene, {
-    detail: renderer.software ? 0 : 1,
-  });
+  const model = {
+    root: new T.Group(),
+    dispose() {
+      disposeAircraft(this.root);
+    },
+  };
+  scene.add(model.root);
+  const status = document.createElement("span");
+  status.className = "aircraft-loading";
+  status.setAttribute("role", "status");
+  status.textContent = "Chargement de l’A320neo…";
+  host.append(status);
+  loadAircraftModel()
+    .then((root) => {
+      if (disposed) {
+        disposeAircraft(root);
+        return;
+      }
+      model.root.add(root);
+      dirty = true;
+      status.remove();
+    })
+    .catch((error) => {
+      if (!disposed)
+        status.textContent =
+          "La vue 3D n’a pas pu être chargée. Les équipements restent accessibles.";
+      console.error("Aircraft asset", error);
+    });
   let active = null,
     dirty = true,
     transition = true,
@@ -114,13 +164,14 @@ export function createAircraft(host, onSelect) {
       focusDone = resolve;
     });
   }
-  let down = null;
-  const pointerDown = (e) => {
-    down = [e.clientX, e.clientY];
-  };
-  const pointerUp = (e) => {
-    if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5)
-      return;
+  let down = null,
+    hovered = null;
+  function zoneOf(object) {
+    for (let o = object; o && o !== model.root; o = o.parent)
+      if (o.userData.maintenanceZone) return o.userData.maintenanceZone;
+    return null;
+  }
+  function pick(e) {
     const rect = renderer.domElement.getBoundingClientRect();
     const ray = new T.Raycaster();
     ray.setFromCamera(
@@ -131,17 +182,64 @@ export function createAircraft(host, onSelect) {
       camera,
     );
     const hit = ray.intersectObject(model.root, true)[0];
-    if (hit) {
-      const nearest = ZONES.map((z) => ({
-        z,
-        d: new T.Vector3(...z.position).distanceTo(hit.point),
-      })).sort((a, b) => a.d - b.d)[0];
-      if (nearest.d < 2.1) onSelect(nearest.z.id);
-    }
+    if (!hit) return null;
+    const semantic = zoneOf(hit.object);
+    if (semantic) return semantic;
+    const nearest = ZONES.map((z) => ({
+      z,
+      d: new T.Vector3(...z.position).distanceTo(hit.point),
+    })).sort((a, b) => a.d - b.d)[0];
+    return nearest.d < 1.5 ? nearest.z.id : null;
+  }
+  function highlight(id) {
+    if (hovered === id) return;
+    hovered = id;
+    renderer.domElement.style.cursor = id ? "pointer" : "grab";
+    renderer.domElement.title =
+      ZONES.find((z) => z.id === id)?.name || "Glisser pour tourner";
+    model.root.traverse((o) => {
+      if (!o.isMesh) return;
+      o.material.emissive.setHex(id && zoneOf(o) === id ? 0x22586f : 0);
+      o.material.emissiveIntensity = 0.13;
+    });
+    markers.forEach((m) =>
+      m.button.classList.toggle("hovered", m.zone.id === id),
+    );
+    dirty = true;
+  }
+  const pointerDown = (e) => {
+    down = [e.clientX, e.clientY];
+  };
+  const pointerMove = (e) => {
+    if (!down) highlight(pick(e));
+  };
+  const pointerLeave = () => {
     down = null;
+    highlight(null);
+  };
+  const pointerUp = (e) => {
+    const click =
+      down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 5;
+    down = null;
+    if (click) {
+      const id = pick(e);
+      if (id) onSelect(id);
+    }
   };
   renderer.domElement.addEventListener("pointerdown", pointerDown);
   renderer.domElement.addEventListener("pointerup", pointerUp);
+  renderer.domElement.addEventListener("pointermove", pointerMove);
+  renderer.domElement.addEventListener("pointerleave", pointerLeave);
+  function prepareJourney(id) {
+    const zone = ZONES.find((z) => z.id === id);
+    if (!zone) return;
+    highlight(id);
+    const point = new T.Vector3(...zone.position).project(camera);
+    document.documentElement.style.setProperty(
+      "--flight-origin",
+      `${(point.x * 0.5 + 0.5) * 100}% ${(-point.y * 0.5 + 0.5) * 100}%`,
+    );
+  }
   const resize = () => {
     const w = host.clientWidth,
       h = host.clientHeight;
@@ -249,6 +347,7 @@ export function createAircraft(host, onSelect) {
   frame = requestAnimationFrame(animate);
   return {
     focus,
+    prepareJourney,
     dispose() {
       disposed = true;
       focusDone?.(false);
@@ -259,7 +358,12 @@ export function createAircraft(host, onSelect) {
       controls.dispose();
       renderer.domElement.removeEventListener("pointerdown", pointerDown);
       renderer.domElement.removeEventListener("pointerup", pointerUp);
+      renderer.domElement.removeEventListener("pointermove", pointerMove);
+      renderer.domElement.removeEventListener("pointerleave", pointerLeave);
       model.dispose();
+      status.remove();
+      floor?.geometry.dispose();
+      floor?.material.dispose();
       environment?.dispose();
       leaders.remove();
       renderer.dispose?.();

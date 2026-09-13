@@ -168,17 +168,9 @@ export function AircraftExperience({ mode, navigate, flightBridge }) {
       setAircraft(ac);
       setCycle(60);
     }
-    if (modeRef.current === "home" && api.current) {
-      const finished = await api.current.focus(id);
-      if (
-        !finished ||
-        token !== journey.current ||
-        modeRef.current !== "home"
-      ) {
-        setTravelling(false);
-        return;
-      }
-    }
+    api.current?.prepareJourney(id);
+    // One shared transition owns the whole journey; never await a camera
+    // focus before mounting the destination (that produced the visible pause).
     await navigate(id === "engine" ? "studio" : "equipment", { direct: true });
     if (token === journey.current) setTravelling(false);
   }
@@ -281,7 +273,16 @@ export function AircraftExperience({ mode, navigate, flightBridge }) {
             />
             <div className="aircraft-scale">
               <span>Glisser pour tourner · Molette pour zoomer</span>
-              <span>Maquette stylisée, positions indicatives</span>
+              <span>
+                A320neo · Modèle FlightGear ·{" "}
+                <a
+                  href="https://github.com/A1i-lab/aeropredict-mro/tree/main/third_party/flightgear-a320"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Crédits et sources GPL-2.0
+                </a>
+              </span>
             </div>
           </div>
           <aside className="aircraft-story" key={zone || "intro"}>

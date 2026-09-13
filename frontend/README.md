@@ -111,3 +111,26 @@ framing control, return to aircraft, aircraft-to-engine navigation, and entry to
 equipment from the lower welcome button. The cloud validation browser has WebGL
 disabled, so these checks exercise the CPU fallback; GPU rendering performance
 and physical mobile-device smoothness are not claimed as verified.
+
+## A320neo asset and single journey (13/09/2026, follow-up)
+
+The earlier procedural aircraft has been replaced in the live renderer with the
+FlightGear A320neo exterior and LEAP engines: 108,728 triangles and 176 meshes.
+Source, GPL-2.0 license and reproducible conversion instructions are in
+`third_party/flightgear-a320`. The named objects retain separate fans, gear
+mechanisms, slats, spoilers, doors and sensors. Model loading is local from the
+packaged HTML. Studio environment lighting and soft GPU shadows complement
+material-specific metallic/roughness values. The CPU fallback now samples the
+same textures with perspective-correct UVs, preserving 3D rotation and depth.
+
+Aircraft selection starts one shared visual transition immediately, anchored on
+the chosen zone. There is no awaited preliminary camera flight. Destination
+geometry is synchronously prepared in exploded configuration before its first
+snapshot, including the engine. All five equipment viewers start exploded.
+Browsers without View Transitions use one reveal; reduced-motion skips motion.
+The shared transition is a screen-space zoom between rendered scenes, not a
+single persistent-camera simulation of an aircraft being physically disassembled.
+
+The cloud validation browser has WebGL disabled. CPU renders can validate shape,
+texture, loading and navigation; they cannot validate GPU shadows, shader lighting
+or physical-device frame rates. The data and prediction methods are unchanged.

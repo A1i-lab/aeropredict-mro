@@ -9,13 +9,13 @@ import { buildEquipmentModel, EQUIPMENT_DETAILS } from "./equipment-models";
 export function EquipmentViewer({ systemId, metric, value, unit }) {
   const host = useRef(null),
     api = useRef(null);
-  const [exploded, setExploded] = useState(false),
+  const [exploded, setExploded] = useState(true),
     [selected, setSelected] = useState(null),
     [error, setError] = useState(false);
   const meta = EQUIPMENT_DETAILS[systemId];
   useLayoutEffect(() => {
     setSelected(null);
-    setExploded(false);
+    setExploded(true);
     setError(false);
     let renderer,
       model,
@@ -65,11 +65,12 @@ export function EquipmentViewer({ systemId, metric, value, unit }) {
       light.position.set(-3, 8, 6);
       scene.add(light);
       model = buildEquipmentModel(scene, systemId);
+      model.setExplode(1);
       let dirty = true,
         visible = true,
         last = 0,
-        explode = 0,
-        goalExplode = 0,
+        explode = 1,
+        goalExplode = 1,
         moving = true;
       const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
       const goal = new T.Vector3(),

@@ -94,3 +94,47 @@ test("depth rendering keeps foreground details visible regardless of scene order
     global.document = previous;
   }
 });
+
+test("packaged A320neo preserves real geometry, semantic zones and local textures", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { gunzipSync } = await import("node:zlib");
+  const b = gunzipSync(
+    readFileSync(new URL("../src/assets/a320neo.glb.gz", import.meta.url)),
+  );
+  assert.equal(b.toString("ascii", 0, 4), "glTF");
+  assert.equal(b.readUInt32LE(8), b.length);
+  const doc = JSON.parse(b.toString("utf8", 20, 20 + b.readUInt32LE(12)));
+  for (const name of [
+    "Aircraft",
+    "LeftEngine",
+    "RightEngine",
+    "LandingGear",
+    "Sensors",
+    "CockpitWindshield",
+  ])
+    assert.ok(
+      doc.nodes.some((n) => n.name === name),
+      name,
+    );
+  for (const zone of ["engine", "brakes", "actuator", "apu", "pack"])
+    assert.ok(
+      doc.nodes.some((n) => n.extras?.maintenanceZone === zone),
+      zone,
+    );
+  for (const name of ["FanLEAPL", "FanLEAPR"]) {
+    const mesh = doc.meshes.find((m) => m.name === name);
+    assert.ok(
+      mesh.primitives.reduce((s, p) => s + doc.accessors[p.indices].count, 0) >
+        3000,
+    );
+  }
+  assert.ok(doc.images.every((i) => Number.isInteger(i.bufferView) && !i.uri));
+  assert.ok(doc.buffers.every((b) => !b.uri));
+  const binStart = 28 + b.readUInt32LE(12);
+  for (const a of doc.accessors.filter((a) => a.componentType === 5126)) {
+    const view = doc.bufferViews[a.bufferView],
+      start = binStart + view.byteOffset;
+    for (let j = 0; j < view.byteLength; j += 4)
+      assert.ok(Number.isFinite(b.readFloatLE(start + j)));
+  }
+});

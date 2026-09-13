@@ -391,7 +391,9 @@ export function createEngine(host, onSelect, onReady) {
       camera.updateProjectionMatrix();
       camera.position
         .set(-6.7, 3.4, 8.0)
-        .multiplyScalar(Math.max(1, 1.35 / camera.aspect));
+        .multiplyScalar(
+          Math.max(1, 1.35 / camera.aspect) * (targetExplode ? 1.22 : 1),
+        );
       controls.update();
       renderer.render(scene, camera);
       dirty = false;
@@ -404,11 +406,17 @@ export function createEngine(host, onSelect, onReady) {
         o.material.emissiveIntensity = o.userData.id === selected ? 0.32 : 0;
       });
     },
-    setExplode(v) {
+    setExplode(v, immediate = false) {
       dirty = true;
       if (Boolean(targetExplode) !== v)
         camera.position.multiplyScalar(v ? 1.22 : 1 / 1.22);
       targetExplode = v ? 1 : 0;
+      if (immediate) {
+        explode = targetExplode;
+        sections.forEach((g) => {
+          g.position.x = g.userData.offset * explode;
+        });
+      }
     },
     setCut(v) {
       dirty = true;

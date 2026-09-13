@@ -293,6 +293,7 @@ function EngineCanvas({
       apiRef.current = api;
       api.setCut(cut);
       api.setSelected(selectedPart);
+      api.setExplode(exploded, true);
       api.renderNow();
     } catch (e) {
       setError(true);
@@ -351,7 +352,7 @@ function App() {
     [filter, setFilter] = useState("ALL"),
     [partId, setPartId] = useState(null),
     [cut, setCut] = useState(true),
-    [exploded, setExploded] = useState(false),
+    [exploded, setExploded] = useState(true),
     [playing, setPlaying] = useState(false),
     [airflow, setAirflow] = useState(false),
     [capacity, setCapacity] = useState(10),
@@ -399,6 +400,7 @@ function App() {
     const update = () => {
       if (request !== routeRequest.current) return;
       flushSync(() => {
+        if (p === "studio" && page === "home") setExploded(true);
         setPage(p);
         setMenu(false);
       });
@@ -414,21 +416,14 @@ function App() {
       }
     } else if (!reduced) {
       const main = document.getElementById("main");
-      await main.animate(
-        [
-          { opacity: 1, transform: "scale(1)" },
-          { opacity: 0, transform: "scale(1.025)" },
-        ],
-        { duration: 180, easing: "ease-in", fill: "forwards" },
-      ).finished;
       update();
-      main.getAnimations().forEach((a) => a.cancel());
+      // A single reveal for browsers without the shared-element API.
       await main.animate(
         [
-          { opacity: 0, transform: "scale(.975)" },
+          { opacity: 0, transform: "scale(.92)" },
           { opacity: 1, transform: "scale(1)" },
         ],
-        { duration: 260, easing: "ease-out" },
+        { duration: 1200, easing: "cubic-bezier(.16,1,.3,1)" },
       ).finished;
     } else update();
     if (request !== routeRequest.current) return;
