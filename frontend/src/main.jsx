@@ -384,9 +384,22 @@ function App() {
     toastTimer.current = setTimeout(() => setToast(""), 3500);
   };
   useEffect(() => () => clearTimeout(toastTimer.current), []);
-  const navigate = async (p, { direct = false } = {}) => {
+  const navigate = async (p, { direct = false, cinematic = false } = {}) => {
+    if (flightBridge.current?.busy && !cinematic) {
+      if (p !== "home") return;
+      flightBridge.current.cancel();
+      direct = true;
+      cinematic = true;
+    }
     if (p === page) return;
     const request = ++routeRequest.current;
+    if (
+      !direct &&
+      p === "home" &&
+      (page === "studio" || page === "equipment") &&
+      flightBridge.current
+    )
+      return flightBridge.current.exit();
     if (
       !direct &&
       page === "home" &&
@@ -406,7 +419,8 @@ function App() {
       });
       window.scrollTo({ top: 0, behavior: "instant" });
     };
-    if (document.startViewTransition && !reduced) {
+    if (cinematic) update();
+    else if (document.startViewTransition && !reduced) {
       const transition = document.startViewTransition(update);
       activeTransition.current = transition;
       try {
@@ -427,13 +441,26 @@ function App() {
       ).finished;
     } else update();
     if (request !== routeRequest.current) return;
-    if (p === "home") flightBridge.current?.reset();
+    if (p === "home" && !cinematic) flightBridge.current?.reset();
     const heading = document.querySelector("#main h1:not([hidden])");
     if (heading && heading.getClientRects().length) {
       heading.tabIndex = -1;
       heading.focus({ preventScroll: true });
     }
   };
+  useEffect(() => {
+    const escape = (event) => {
+      if (
+        event.key === "Escape" &&
+        (page === "studio" || page === "equipment")
+      ) {
+        event.preventDefault();
+        navigate("home");
+      }
+    };
+    window.addEventListener("keydown", escape);
+    return () => window.removeEventListener("keydown", escape);
+  }, [page]);
   const select = (e) => {
     setEngineId(e.unit);
     setEvidence(false);

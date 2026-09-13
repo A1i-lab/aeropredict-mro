@@ -3,6 +3,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { DepthRenderer } from "./depth-renderer";
 import { loadAircraftModel, disposeAircraft } from "./aircraft-asset";
+import { createAircraftCamera } from "./aircraft-camera";
 
 export const ZONES = [
   { id: "engine", name: "Moteur", position: [-2.5, -1.04, 2.78] },
@@ -240,7 +241,9 @@ export function createAircraft(host, onSelect) {
       `${(point.x * 0.5 + 0.5) * 100}% ${(-point.y * 0.5 + 0.5) * 100}%`,
     );
   }
+  let cinematic;
   const resize = () => {
+    if (cinematic?.busy) return;
     const w = host.clientWidth,
       h = host.clientHeight;
     if (!w || !h) return;
@@ -268,15 +271,29 @@ export function createAircraft(host, onSelect) {
   camera.position.copy(goalCamera);
   controls.target.copy(goalTarget);
   controls.update();
+  cinematic = createAircraftCamera({
+    host,
+    renderer,
+    camera,
+    controls,
+    zones: ZONES,
+  });
   let frame;
   function animate(t) {
     if (disposed) return;
     frame = requestAnimationFrame(animate);
-    if (!visible || document.hidden || t - last < (renderer.software ? 60 : 16))
+    if (
+      (!visible && !cinematic.busy) ||
+      document.hidden ||
+      t - last < (renderer.software ? 60 : 16)
+    )
       return;
     const blend = reduced ? 1 : 1 - Math.exp(-Math.min(120, t - last) / 125);
     last = t;
-    if (transition) {
+    if (cinematic.busy) {
+      cinematic.tick(t);
+      dirty = true;
+    } else if (transition) {
       camera.position.lerp(goalCamera, blend);
       controls.target.lerp(goalTarget, blend);
       dirty = true;
@@ -291,6 +308,10 @@ export function createAircraft(host, onSelect) {
     controls.update();
     if (dirty) {
       renderer.render(scene, camera);
+      if (cinematic.busy) {
+        dirty = false;
+        return;
+      }
       const w = host.clientWidth,
         h = host.clientHeight;
       leaders.setAttribute("viewBox", `0 0 ${w} ${h}`);
@@ -348,8 +369,19 @@ export function createAircraft(host, onSelect) {
   return {
     focus,
     prepareJourney,
+    get travelling() {
+      return cinematic.busy;
+    },
+    travel(id, swap, returning = false) {
+      transition = false;
+      return cinematic.start(id, swap, returning);
+    },
+    cancelTravel() {
+      cinematic.cancel();
+    },
     dispose() {
       disposed = true;
+      cinematic.cancel();
       focusDone?.(false);
       focusDone = null;
       cancelAnimationFrame(frame);

@@ -128,8 +128,17 @@ the chosen zone. There is no awaited preliminary camera flight. Destination
 geometry is synchronously prepared in exploded configuration before its first
 snapshot, including the engine. All five equipment viewers start exploded.
 Browsers without View Transitions use one reveal; reduced-motion skips motion.
-The shared transition is a screen-space zoom between rendered scenes, not a
-single persistent-camera simulation of an aircraft being physically disassembled.
+The follow-up camera controller now moves the actual aircraft camera and target
+on one 1.6-second timeline. The live canvas follows the destination layout while
+the already-exploded detail scene fades in before camera travel ends. It is not a
+physics simulation of the whole aircraft being disassembled.
+
+`aircraft-camera.js` is driven by the existing aircraft animation loop. It locks
+conflicting selections, handles cancellation, restores the canvas to its original
+host, and reverses the camera journey on return. Escape safely returns home.
+Reduced-motion users keep immediate access to every destination. CPU fallback
+has no GPU lighting or shadow support; the aircraft geometry and texture UVs are
+the same in both renderers.
 
 The cloud validation browser has WebGL disabled. CPU renders can validate shape,
 texture, loading and navigation; they cannot validate GPU shadows, shader lighting

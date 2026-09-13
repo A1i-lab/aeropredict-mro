@@ -887,6 +887,21 @@
   color: #567068;
   font-size: 14px;
 }
+.aircraft-flight-layer {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 18px;
+  background: transparent;
+  will-change: transform, opacity;
+}
+.aircraft-flight-layer canvas {
+  display: block;
+}
+[data-flight-state] #main button {
+  pointer-events: none;
+}
 .aircraft-hotspot.hovered {
   background: #e0ede8;
   border-color: #608b7e;

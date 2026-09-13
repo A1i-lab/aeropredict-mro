@@ -118,6 +118,16 @@ export function AircraftExperience({ mode, navigate, flightBridge }) {
   selectRef.current = enter;
   flightBridge.current = {
     enter,
+    get busy() {
+      return !!api.current?.travelling;
+    },
+    cancel() {
+      api.current?.cancelTravel();
+    },
+    exit() {
+      const swap = () => navigate("home", { direct: true, cinematic: true });
+      return api.current ? api.current.travel(zone, swap, true) : swap();
+    },
     reset() {
       setZone(null);
       api.current?.focus(null);
@@ -160,6 +170,7 @@ export function AircraftExperience({ mode, navigate, flightBridge }) {
       (!queueOnly || queue.includes(r.id)),
   );
   async function enter(id, ac = aircraft) {
+    if (api.current?.travelling) return;
     const token = ++journey.current;
     setZone(id);
     setTravelling(true);
@@ -169,12 +180,17 @@ export function AircraftExperience({ mode, navigate, flightBridge }) {
       setCycle(60);
     }
     api.current?.prepareJourney(id);
-    // One shared transition owns the whole journey; never await a camera
-    // focus before mounting the destination (that produced the visible pause).
-    await navigate(id === "engine" ? "studio" : "equipment", { direct: true });
+    const swap = () =>
+      navigate(id === "engine" ? "studio" : "equipment", {
+        direct: true,
+        cinematic: true,
+      });
+    if (api.current) await api.current.travel(id, swap);
+    else await swap();
     if (token === journey.current) setTravelling(false);
   }
   function openEquipment(id, ac = aircraft) {
+    if (api.current?.travelling) return;
     if (modeRef.current === "home") return enter(id, ac);
     setSystemId(id);
     setAircraft(ac);
