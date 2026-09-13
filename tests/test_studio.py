@@ -32,3 +32,16 @@ def test_studio_shell_and_classic_escape_hatch():
     assert '<script type="module">' in html
     assert 'fonts.googleapis.com' not in html
     assert 'src="./assets/' not in html
+
+def test_aircraft_is_separately_served_and_old_scene_is_not_packaged():
+    import gzip
+    import tomllib
+    html=(ROOT/'frontend/studio.html').read_text()
+    assert 'app/static/models/a350-900.glb.gz' in html
+    assert 'a320neo.glb' not in html
+    assert 'Chargement de l’A320' not in html
+    assert len(html.encode()) < 2_000_000
+    config=tomllib.loads((ROOT/'.streamlit/config.toml').read_text())
+    assert config['server']['enableStaticServing']
+    model=gzip.decompress((ROOT/'static/models/a350-900.glb.gz').read_bytes())
+    assert model[:4] == b'glTF'

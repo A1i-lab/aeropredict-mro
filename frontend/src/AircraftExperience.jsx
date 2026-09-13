@@ -269,7 +269,7 @@ export function AircraftExperience({ mode, navigate, flightBridge }) {
           <div className="aircraft-visual">
             <div className="aircraft-caption">
               <span>
-                <Plane size={18} /> A320 · EXPLORATION DES SYSTÈMES
+                <Plane size={18} /> A350-900 · EXPLORATION DES SYSTÈMES
               </span>
               <button
                 className="icon-button"
@@ -290,9 +290,9 @@ export function AircraftExperience({ mode, navigate, flightBridge }) {
             <div className="aircraft-scale">
               <span>Glisser pour tourner · Molette pour zoomer</span>
               <span>
-                A320neo · Modèle FlightGear ·{" "}
+                A350-900 · Modèle FlightGear ·{" "}
                 <a
-                  href="https://github.com/A1i-lab/aeropredict-mro/tree/main/third_party/flightgear-a320"
+                  href="https://github.com/A1i-lab/aeropredict-mro/tree/main/third_party/flightgear-a350"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -327,7 +327,7 @@ export function AircraftExperience({ mode, navigate, flightBridge }) {
             </p>
             <div className="story-note">
               {zone === "engine"
-                ? "100 moteurs NASA indépendants. Ils ne sont pas les moteurs de cet A320."
+                ? "100 moteurs NASA indépendants. Ils ne sont pas les moteurs de cet A350-900."
                 : selected
                   ? `${selected.location}. ${selected.observation}`
                   : "La maintenance prédictive consiste à repérer une évolution avant qu’elle ne devienne un problème, puis à faire examiner les éléments utiles."}
@@ -552,7 +552,7 @@ export function AircraftExperience({ mode, navigate, flightBridge }) {
             <p>
               {AIRCRAFT.method} Les valeurs et les seuils sont inventés pour la
               démonstration : ils ne représentent ni des limites de maintenance
-              A320 ni une probabilité de panne.
+              A350-900 ni une probabilité de panne.
             </p>
             <p>
               Une droite est ajustée aux 20 derniers cycles. On calcule son

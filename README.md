@@ -115,10 +115,18 @@ MIT for original code. Dataset and source paper remain subject to their original
 ### Aircraft welcome and equipment exploration
 
 The public welcome now explains the purpose of predictive maintenance with a
-rotatable, stylised A320-family aircraft. Explore the engine, APU, brakes,
+rotatable FlightGear-derived A350-900-inspired aircraft. Explore the engine, APU, brakes,
 hydraulic system, cabin air system and flap actuator through labelled zones.
 The original NASA motor analyses remain available. Five additional equipment
 families use 60 separately identified synthetic scenarios (12 fictitious aircraft,
 3,600 observations). Their threshold projections, history replay and exported
 review lists are educational simulations, not validated aircraft fault forecasts.
 See `frontend/README.md` for provenance, limits and reproducible build steps.
+
+## A350-900 aircraft update
+
+The active exterior now uses the GPL-2.0-or-later FlightGear A350XWB source described in [third_party/flightgear-a350](third_party/flightgear-a350/README.md). The A320neo implementation remains recoverable at commit `426599f` and branch `recovery/a320neo-426599f`.
+
+The aircraft is fetched on demand from `app/static/models/a350-900.glb.gz`; Streamlit static serving must remain enabled. The HTML contains application code and fonts, not the model. Vite development serves the same model through a local middleware. The model includes its textures and requires no external CDN. The continuous camera timeline and immediate exploded destination view are preserved. NASA engine predictions and synthetic equipment monitoring remain independent of the aircraft family.
+
+Local validation: `node --test frontend/tests/*.test.js`, `python -m pytest`, `npm --prefix frontend run build`, then `python scripts/package_studio.py`. A successful build does not establish production deployment or GPU rendering quality.

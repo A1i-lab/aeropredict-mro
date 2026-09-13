@@ -95,11 +95,13 @@ test("depth rendering keeps foreground details visible regardless of scene order
   }
 });
 
-test("packaged A320neo preserves real geometry, semantic zones and local textures", async () => {
+test("externally served A350-900 preserves real geometry, semantic zones and local textures", async () => {
   const { readFileSync } = await import("node:fs");
   const { gunzipSync } = await import("node:zlib");
   const b = gunzipSync(
-    readFileSync(new URL("../src/assets/a320neo.glb.gz", import.meta.url)),
+    readFileSync(
+      new URL("../../static/models/a350-900.glb.gz", import.meta.url),
+    ),
   );
   assert.equal(b.toString("ascii", 0, 4), "glTF");
   assert.equal(b.readUInt32LE(8), b.length);
@@ -121,11 +123,11 @@ test("packaged A320neo preserves real geometry, semantic zones and local texture
       doc.nodes.some((n) => n.extras?.maintenanceZone === zone),
       zone,
     );
-  for (const name of ["FanLEAPL", "FanLEAPR"]) {
+  for (const name of ["fan_eng1", "fan_eng2"]) {
     const mesh = doc.meshes.find((m) => m.name === name);
     assert.ok(
       mesh.primitives.reduce((s, p) => s + doc.accessors[p.indices].count, 0) >
-        3000,
+        300,
     );
   }
   assert.ok(doc.images.every((i) => Number.isInteger(i.bufferView) && !i.uri));

@@ -1,8 +1,9 @@
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import assetUrl from "./assets/a320neo.glb.gz?url";
+const assetUrl = new URL("app/static/models/a350-900.glb.gz", document.baseURI)
+  .href;
 
-// GPL-2.0 FlightGear exterior, vendored with editable source and conversion script.
+// GPL-2.0-or-later FlightGear A350XWB exterior, vendored with editable source and conversion script.
 // Asset coordinates are metres; the scene wrapper retains the app's half scale.
 export function prepareAircraft(root) {
   root.name = "Aircraft";
@@ -12,37 +13,6 @@ export function prepareAircraft(root) {
     o.castShadow = o.receiveShadow = true;
     const material = o.material;
     if (material.map) material.map.anisotropy = 4;
-    if (material.userData.demonstratorPaint) {
-      // Paint the source's bare-metal primer using a material, preserving the UV
-      // panel/window detail. The original texture remains in the source archive.
-      material.onBeforeCompile = (shader) => {
-        shader.vertexShader = shader.vertexShader
-          .replace(
-            "#include <common>",
-            "#include <common>\nvarying vec3 aircraftPosition;",
-          )
-          .replace(
-            "#include <begin_vertex>",
-            "#include <begin_vertex>\naircraftPosition = position;",
-          );
-        shader.fragmentShader = shader.fragmentShader
-          .replace(
-            "#include <common>",
-            "#include <common>\nvarying vec3 aircraftPosition;",
-          )
-          .replace(
-            "#include <map_fragment>",
-            `#include <map_fragment>
-          float hi=max(diffuseColor.r,max(diffuseColor.g,diffuseColor.b));
-          float lo=min(diffuseColor.r,min(diffuseColor.g,diffuseColor.b));
-          if(hi-lo>.035 && hi>.06) diffuseColor.rgb=vec3(.79,.82,.84)*(0.88+0.12*hi);
-          if(aircraftPosition.x < -17.8 || (aircraftPosition.x > -10.0 && aircraftPosition.x < 0.0 && aircraftPosition.y < -.1)) diffuseColor.rgb=vec3(.79,.82,.84);
-          if(aircraftPosition.y>2.0 && aircraftPosition.x>9.0 && abs(aircraftPosition.z)<.8) diffuseColor.rgb=vec3(.018,.044,.09);
-        `,
-          );
-      };
-      material.customProgramCacheKey = () => "aeropredict-neutral-paint-v1";
-    }
   });
   return root;
 }

@@ -6,14 +6,14 @@ import { loadAircraftModel, disposeAircraft } from "./aircraft-asset";
 import { createAircraftCamera } from "./aircraft-camera";
 
 export const ZONES = [
-  { id: "engine", name: "Moteur", position: [-2.5, -1.04, 2.78] },
-  { id: "apu", name: "APU", position: [9.2, 0.46, 0] },
-  { id: "brakes", name: "Freins", position: [-0.56, -1.92, 1.94] },
+  { id: "engine", name: "Moteur", position: [-3.0, -0.4, 2.9] },
+  { id: "apu", name: "APU", position: [9.1, 0.5, 0] },
+  { id: "brakes", name: "Freins", position: [0.15, -1.16, 1.5] },
   { id: "hydraulic", name: "Hydraulique", position: [0.7, -0.65, 0] },
   { id: "pack", name: "Air cabine", position: [-0.7, -0.55, -1] },
-  { id: "actuator", name: "Actionneur", position: [2.6, 0.12, 5.3] },
+  { id: "actuator", name: "Actionneur", position: [2.4, 0.6, 5.7] },
 ];
-// Detailed FlightGear A320neo exterior. Attribution and editable sources in the repo.
+// Detailed FlightGear A350-900 exterior. Attribution and editable sources in the repo.
 export function createAircraft(host, onSelect) {
   const scene = new T.Scene();
   let renderer;
@@ -31,7 +31,7 @@ export function createAircraft(host, onSelect) {
   host.append(renderer.domElement);
   renderer.domElement.setAttribute(
     "aria-label",
-    "Avion 3D inspiré de la famille A320. Glisser pour tourner. Les boutons permettent de choisir un équipement.",
+    "Avion 3D inspiré de la famille A350-900. Glisser pour tourner. Les boutons permettent de choisir un équipement.",
   );
   const camera = new T.PerspectiveCamera(38, 1, 0.1, 150);
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -64,7 +64,7 @@ export function createAircraft(host, onSelect) {
       new T.ShadowMaterial({ color: 0x263344, opacity: 0.19 }),
     );
     floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -2.2;
+    floor.position.y = -1.4;
     floor.receiveShadow = true;
     scene.add(floor);
   }
@@ -95,7 +95,7 @@ export function createAircraft(host, onSelect) {
   const status = document.createElement("span");
   status.className = "aircraft-loading";
   status.setAttribute("role", "status");
-  status.textContent = "Chargement de l’A320neo…";
+  status.textContent = "Chargement de l’A350-900…";
   host.append(status);
   loadAircraftModel()
     .then((root) => {

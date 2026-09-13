@@ -1,4 +1,4 @@
-"""Inline the Vite build for self-contained Streamlit delivery, without a CDN."""
+"""Package the application code for Streamlit; aircraft stays in static/models."""
 from pathlib import Path
 import re
 ROOT = Path(__file__).resolve().parents[1]
