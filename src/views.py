@@ -1,3 +1,4 @@
+from .diagnostic_view import diagnostic
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -154,4 +155,4 @@ def about(f,h,s,m):
     st.markdown('[NASA C-MAPSS repository](https://www.nasa.gov/intelligent-systems-division/discovery-and-systems-health/pcoe/pcoe-data-set-repository/) · [Public PROGNOS presentation by AFI KLM E&M](https://vimeo.com/220937470) · [Streamlit deployment documentation](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app)')
     st.caption('Original AI-generated aircraft illustration, used only for visual context. Code: MIT. Dataset: NASA source terms. No real aircraft safety decisions.')
 
-VIEWS={'Fleet Overview':overview,'Engine Health':engine,'Prognostics & Alerts':alerts,'Maintenance Planner':planner,'Model Performance':performance,'Data & Model Transparency':transparency,'About':about}
+VIEWS={'Fleet Overview':overview,'Engine Health':engine,'Predictive Diagnostic':diagnostic,'Prognostics & Alerts':alerts,'Maintenance Planner':planner,'Model Performance':performance,'Data & Model Transparency':transparency,'About':about}

@@ -1,0 +1,60 @@
+{
+  "seed": 20260914,
+  "label": "SYNTHETIC / DEMONSTRATION DATA",
+  "method": "30 consecutive observations from one fitted-training engine at five lifetime stages, plus independent uniform noise bounded to +/-1.5% of training IQR per sensor; clipped to fitted-training min/max. Not independent validation engines. No assigned RUL or target values.",
+  "sensors": [
+    "s2",
+    "s3",
+    "s4",
+    "s6",
+    "s7",
+    "s8",
+    "s9",
+    "s11",
+    "s12",
+    "s13",
+    "s14",
+    "s15",
+    "s17",
+    "s20",
+    "s21"
+  ],
+  "profiles": [
+    {
+      "engine_id": "SYN-ENG-001",
+      "source_training_unit": 1,
+      "lifetime_fraction": 0.3,
+      "first_cycle": 28,
+      "last_cycle": 57
+    },
+    {
+      "engine_id": "SYN-ENG-002",
+      "source_training_unit": 1,
+      "lifetime_fraction": 0.55,
+      "first_cycle": 76,
+      "last_cycle": 105
+    },
+    {
+      "engine_id": "SYN-ENG-003",
+      "source_training_unit": 1,
+      "lifetime_fraction": 0.75,
+      "first_cycle": 115,
+      "last_cycle": 144
+    },
+    {
+      "engine_id": "SYN-ENG-004",
+      "source_training_unit": 1,
+      "lifetime_fraction": 0.9,
+      "first_cycle": 143,
+      "last_cycle": 172
+    },
+    {
+      "engine_id": "SYN-ENG-005",
+      "source_training_unit": 1,
+      "lifetime_fraction": 0.98,
+      "first_cycle": 159,
+      "last_cycle": 188
+    }
+  ],
+  "excluded_from": "training, validation, calibration and all official evaluation metrics"
+}

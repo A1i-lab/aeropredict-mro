@@ -130,3 +130,34 @@ The active exterior now uses the GPL-2.0-or-later FlightGear A350XWB source desc
 The aircraft is fetched on demand from `app/static/models/a350-900.glb.gz`; Streamlit static serving must remain enabled. The HTML contains application code and fonts, not the model. Vite development serves the same model through a local middleware. The model includes its textures and requires no external CDN. The continuous camera timeline is preserved. Components now land assembled, with a reversible 1.2-second staggered explosion. NASA engine predictions and synthetic equipment monitoring remain independent of the aircraft family.
 
 Local validation: `node --test frontend/tests/*.test.js`, `python -m pytest`, `npm --prefix frontend run build`, then `python scripts/package_studio.py`. A successful build does not establish production deployment or GPU rendering quality.
+
+
+## Predictive Diagnostic
+
+Open the classic workspace (`?experience=classic&page=Predictive%20Diagnostic`) and select **Predictive Diagnostic**, beside Engine Health. Engine Health keeps reviewing precomputed NASA benchmark engines. The new workspace runs fresh inference for one submitted engine, using the unchanged `artifacts/models/bundle.joblib` through `src.inference.predict`.
+
+Choose **Demo engine**, **Manual entry** (editable table, add/delete rows, paste, load example), or **Upload CSV** (UTF-8 comma-separated template download and preview). Supply at least **5 consecutive cycles**, preferably **10 or more**, with columns:
+
+```text
+cycle,s2,s3,s4,s6,s7,s8,s9,s11,s12,s13,s14,s15,s17,s20,s21
+```
+
+Optional `engine_id` is metadata only. The UI obtains required sensors from `bundle['sensors']`. Targets such as RUL, health or risk are outputs and are rejected in input. No physical sensor names are assumed. Each row is one observed cycle; retained channels are NASA C-MAPSS sensor channels.
+
+Validation rejects missing/non-numeric/infinite values, duplicate or nonpositive/noninteger cycles, gaps, multiple engines, unexpected columns and histories outside 5–5000 rows. Unordered rows are sorted with a warning. CSV files are limited to 5 MB. Missing previous measurements are never synthesized. Short history generates a warning. Input edits invalidate displayed results until a fresh diagnostic is requested.
+
+The existing pipeline derives 61 features: current cycle, 15 current sensor measurements and each channel's trailing 10-observation mean, standard deviation and 5-observation delta divided by five. It uses causal windows with partial initial history and its original zero fallback for the first five delta values. The first four submitted cycles are omitted from result charts. The saved regressor, classifier, calibration radius and business rules yield RUL, interval, uncalibrated P(RUL ≤ 30), health, risk, priority and suggested action. Historical predictions use only earlier/current rows. The model is cached as a resource; training compatibility bounds are cached as data. User inputs/results stay in session memory and are not persisted to the repository.
+
+The result shows the latest cycle, RUL trajectory and uncertainty band, up to four sensor traces with trailing means, a feature preview and downloadable results. Compatibility uses fitted-training 1st/99th percentiles and min/max per sensor. An unusual value warns rather than blocking inference. This is not a certified or multivariate anomaly detector. The original 80% nominal marginal interval is not a per-engine safety guarantee, especially outside the training domain.
+
+### Synthetic diagnostic database
+
+`data/synthetic/diagnostic_engines.csv` contains 5 synthetic IDs × 30 observations = 150 rows, independent of `equipment_signals.csv`. `diagnostic_engines.json` records source training engine, lifetime positions, channels, method and seed **20260914**. Regenerate with `python scripts/generate_diagnostic_engines.py`.
+
+The generator selects the smallest engine ID in the **fitted training split** recorded in results.json. It takes 30-cycle histories ending at 30%, 55%, 75%, 90% and 98% of that training engine's lifetime, perturbs each measurement by uniform noise bounded to ±1.5% of fitted-training sensor IQR, and clips to fitted-training min/max. This conservative approach preserves plausible cross-channel structure approximately; these are training-derived, perturbed examples, not independent validation engines or simulated real-world A350 operations. No RUL value is assigned. No official test endpoint truth is consulted. Demo outputs reflect the saved model's behavior on familiar training-derived patterns and do not prove generalization.
+
+The database is an **inference sandbox only**, excluded from training, validation, calibration and official model metrics. No existing model, metric, evaluation dataset or A350 geometry/camera/transition file is altered by this module. Predictions must never authorize aircraft operation. AeroPredict has no affiliation with airlines, Airbus or PROGNOS; NASA is the public dataset source only.
+
+### Non-destructive feature-selection review
+
+`artifacts/metrics/feature_selection_review.csv` summarizes existing validation permutation importance only. Of 61 features, 18 have nonpositive estimated importance. Top 30, 20, 15 and 10 account for approximately 99.3%, 97.2%, 95.4% and 87.6% of positive importance. Correlated features and only 20 validation endpoints make these estimates unstable: nonpositive importance does not prove uselessness. A future reduced-feature retraining experiment using the same training/validation split is warranted, particularly top 20/30. No reduced model was trained, no performance advantage is claimed and production features remain unchanged. Calibration and official test data must remain untouched during that future selection experiment.
