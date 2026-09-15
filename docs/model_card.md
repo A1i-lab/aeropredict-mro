@@ -20,4 +20,8 @@ Known limitations: simulation-to-reality gap, one operating condition, one fault
 
 Intended use: portfolio demonstration, reproducible ML evaluation, academic explanation. Out of scope: maintenance authorization, real aircraft risk prediction, dispatch or safety decisions. See methodology.md for exact preprocessing, evaluation conventions and split IDs.
 
+## Predictive Diagnostic (inference only, no retraining)
+
+The Predictive Diagnostic page runs this identical model — the same selection, the same official metrics above — against new engine observations (demo, manually entered or uploaded). It never retrains, never refits calibration, and never modifies this model card's numbers. Minimum input history is 5 consecutive cycles (10+ recommended); required sensors are the 15 listed in the [data dictionary](data_dictionary.md). Observations outside the fitted training range (per-sensor 1st/99th percentile and min/max) surface a compatibility warning rather than a silent extrapolation. Its synthetic demo engines are excluded from every number on this page.
+
 Academic predictive-maintenance demonstrator inspired by publicly described MRO predictive-maintenance principles. Built exclusively with the public NASA C-MAPSS dataset. This project is not affiliated with Air France-KLM or AFI KLM E&M and does not reproduce PROGNOS proprietary algorithms.

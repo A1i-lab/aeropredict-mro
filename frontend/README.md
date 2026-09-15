@@ -143,3 +143,33 @@ the same in both renderers.
 The cloud validation browser has WebGL disabled. CPU renders can validate shape,
 texture, loading and navigation; they cannot validate GPU shadows, shader lighting
 or physical-device frame rates. The data and prediction methods are unchanged.
+
+## A350-900 exterior and reversible assembly motion (14/09/2026, current)
+
+The A320neo exterior above has since been replaced with the FlightGear A350XWB
+source described in [third_party/flightgear-a350](../third_party/flightgear-a350/README.md);
+the A320neo implementation remains recoverable at commit `426599f` and branch
+`recovery/a320neo-426599f`. The aircraft is fetched on demand from
+`app/static/models/a350-900.glb.gz` — Streamlit static serving must stay enabled —
+and includes its own textures with no external CDN. Components land assembled,
+with a reversible, staggered 1.2-second exploded transition instead of starting
+pre-exploded. `aircraft-framing.js` binary-searches the camera distance so the
+aircraft fills the desktop stage without clipping. NASA engine predictions and
+synthetic equipment monitoring remain independent of the aircraft family.
+
+This is the aircraft shown in the top-level README's screenshots. It is still an
+original, simplified teaching model, not certified CAD or a component fault
+diagnosis. Validation: `node --test frontend/tests/*.test.js` (12 tests, including
+framing and assembly-motion coverage), `python -m pytest -q`, `npm --prefix
+frontend run build` and `python scripts/package_studio.py` all pass; the packaged
+`frontend/studio.html` is byte-identical to a fresh build, confirming
+reproducibility.
+
+## Predictive Diagnostic (14/09/2026)
+
+A new Streamlit page, **Predictive Diagnostic**, ships alongside this frontend
+(`src/diagnostic.py`, `src/diagnostic_view.py`) but is not part of the React
+studio itself — it lives in the classic workspace (`?experience=classic`), next
+to Engine Health. It runs the existing saved model on demo, manually entered or
+uploaded engine histories; see the top-level README for details. No studio asset,
+aircraft geometry or synthetic equipment scenario is changed by this addition.

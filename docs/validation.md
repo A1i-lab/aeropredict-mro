@@ -56,3 +56,14 @@ Browser-produced screenshots were not recovered. The remote browser's local URL 
 - Two existing Vercel deployment hooks report failure. They are separate from the
   requested Streamlit deployment, which serves the verified studio. Their hosting
   configurations have not been changed or their failures represented as resolved.
+
+## Predictive Diagnostic release, 14–15/09/2026
+
+- Bundle recovered and verified: SHA-256 match, `git bundle verify` clean, feature branch head matched the expected commit exactly.
+- Local dependency install required two environment workarounds on this machine (a macOS 26 `platform.mac_ver()` gap that broke pip's truststore SSL context, and a Homebrew `libexpat` runtime mismatch breaking `pyexpat`); both are local-machine environment issues, not project defects, and did not touch any tracked file.
+- Full suite reproduced locally: 34 Python (`pytest -q`) + 12 JavaScript (`node --test frontend/tests/*.test.js`) = **46/46 tests passed**, matching the prior environment's report exactly.
+- Frontend production build succeeded (1595 modules); `frontend/studio.html` repackaged byte-identical to the committed version (`git status` clean after rebuild).
+- Local Streamlit run verified in a real Chrome tab at 1440×900: A350 home renders with all six equipment callouts; engine (assembled/exploded) and APU equipment views render correctly; classic workspace shows **Predictive Diagnostic** immediately below Engine Health as required.
+- Predictive Diagnostic exercised live: demo mode ran real inference for `SYN-ENG-001` (**123.4 cycles, HEALTHY**) and `SYN-ENG-005` (**6.8 cycles, CRITICAL**), both matching the values reported by the isolated development environment exactly — confirming the values come from live inference, not hard-coded output. Manual entry mode's editable table populated correctly via "Load example values" with the documented 15-sensor schema. Training-domain compatibility warnings fired correctly for out-of-range synthetic inputs.
+- New portfolio screenshots captured directly from this locally running build (A350 home, engine equipment exploration, Predictive Diagnostic in a CRITICAL scenario, Engine Health, Model Performance) and committed to `docs/screenshots/`.
+- One recurring environment note carried over from prior sessions: this automation browser's tab reports `document.hidden = true` even while active/screenshotted, which pauses the studio's WebGL rendering (an intentional visibility-based pause in the frontend). Screenshots were captured after forcing `visibilityState` to `"visible"` on both the top document and the nested studio iframe — a capture-environment workaround only; it does not change any rendered content, model output or user-facing behavior.
